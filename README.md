@@ -34,12 +34,15 @@ This field is inspired on the module FieldtypeMapMarker by Ryan and the Fieldtyp
 
 `Modules` > `Configure` > `FieldtypeGeocoder`
 
+![Configuration](https://user-images.githubusercontent.com/11630948/121345381-13514c00-c925-11eb-85f0-f4056413f645.png)
 
-## Field Configurtion
 
-`Fields` > `your_field` > `input`
+## Field Configuration
 
+`Fields` > `your_field` > `input`  
 Each field can have a default map center
+
+![Configuration](https://user-images.githubusercontent.com/11630948/121345392-151b0f80-c925-11eb-90d7-c408348888a8.png)
 
 
 ## API Reference
