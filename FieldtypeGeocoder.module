@@ -1,0 +1,530 @@
+<?php
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2021 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
+
+namespace ProcessWire;
+
+use Essence\Http\Exception;
+use Geocoder\Dumper\GeoArray;
+use Geocoder\Formatter\StringFormatter;
+use Geocoder\Http\Provider\AbstractHttpProvider;
+use Geocoder\Location;
+use Geocoder\Provider\OpenCage\OpenCage;
+use Geocoder\Provider\Provider;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\Query;
+use Geocoder\Query\ReverseQuery;
+use Geocoder\StatefulGeocoder;
+use Http\Client\Curl\Client;
+
+class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Geocoder',
+			'version' => 110,
+			'summary' => 'Collect and store Geocode information from several providers',
+			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
+			'icon' => 'globe',
+			'installs' => 'InputfieldGeocode',
+			'searchable' => 'geocoder'
+		);
+	}
+
+	public function init() {
+		require_once(__DIR__ . '/Geocoder.php');
+	}
+
+	/**
+	 * @param Field $field
+	 * @return array
+	 */
+	public function getDatabaseSchema(Field $field) {
+
+		$schema = parent::getDatabaseSchema($field);
+		$schema['data'] = 'VARCHAR(255) NOT NULL DEFAULT ""';
+		$schema['formatted'] = 'TEXT NOT NULL';
+		$schema['geodata'] = 'JSON';
+		$schema['lat'] = "FLOAT(10,6) DEFAULT NULL"; // latitude
+		$schema['lng'] = "FLOAT(10,6) DEFAULT NULL"; // longitude
+		$schema['provider'] = "TINYTEXT"; // Provider (Google/Mapbox etc)
+		$schema['status'] = "INT(10) unsigned NOT NULL DEFAULT 1"; // geocode status
+
+		return $schema;
+	}
+
+	/**
+	 * Return the Inputfield used to collect input for a field of this type
+	 */
+	public function getInputfield(Page $page, Field $field) {
+		return $this->modules->get('InputfieldGeocoder');
+	}
+
+	/**
+	 * Return a blank ready-to-populate value
+	 *
+	 * @param Page $page
+	 * @param Field $field
+	 * @return \ProcessWire\Geocoder
+	 *
+	 */
+	public function getBlankValue(Page $page, Field $field) {
+		return new Geocoder();
+	}
+
+	/**
+	 * Sanitize value for runtime
+	 * @param Page $page
+	 * @param Field $field
+	 * @param int|object|WireArray|string $value
+	 * @return Geocoder
+	 */
+	public function sanitizeValue(Page $page, Field $field, $value) {
+
+		/** @var Geocoder $geocoder */
+		$geocoder = $value;
+
+		if(!$geocoder instanceof Geocoder) {
+			$geocoder = $this->getBlankValue($page, $field);
+			$geocoder->setTrackChanges(true);
+			$geocoder->query = $this->sanitizer->text($value);
+		}
+
+		return $geocoder;
+	}
+
+	/**
+	 * @param Page $page
+	 * @param Field $field
+	 * @param array|int|string $value
+	 * @return array|int|mixed|object|string
+	 */
+	public function ___wakeupValue(Page $page, Field $field, $value) {
+
+		$geocoder = $this->getBlankValue($page, $field);
+
+		if("$value[lat]" === "0") $value['lat'] = '';
+		if("$value[lng]" === "0") $value['lng'] = '';
+
+		$geocoder->setArray([
+			'query' => $value['data'],
+			'formatted' => (string) $value['formatted'],
+			'geodata' => json_decode($value['geodata'],JSON_OBJECT_AS_ARRAY),
+			'lat' => $value['lat'],
+			'lng' => $value['lng'],
+			'provider' => (string) $value['provider'],
+			'status' => (int) $value['status']
+		]);
+
+		return $geocoder->setTrackChanges(true);
+	}
+
+	/**
+	 * For storage in DB
+	 * @param Page $page
+	 * @param Field $field
+	 * @param array|float|int|object|string $value
+	 * @return array
+	 */
+	public function ___sleepValue(Page $page, Field $field, $value) {
+
+		/** @var Geocoder $geocoder */
+		$geocoder = $value;
+		if(!$geocoder instanceof Geocoder) throw new WireException("Expecting an instance of Geocoder");
+
+		// TODO add stuff from inputProcess
+		// Skip geocoding:
+		//
+		// if status not New
+		// if geodate is not empty and
+		// formatted is not emty and
+		// lat is not empty and
+		// lng is not empty and
+		//      If geodata changes or
+		//      If the only change is the query fields
+		$changes = $geocoder->getChanges();
+		if(
+			$geocoder->status !== 1 &&
+			is_array($geocoder->geodata) &&
+			!!count($geocoder->geodata) &&
+			!empty($geocoder->formatted) &&
+			!empty($geocoder->lat) &&
+			!empty($geocoder->lng) &&
+			(
+				$geocoder->isChanged('geodata') ||
+				(
+					count($changes) === 1 &&
+					$changes[0] === 'query'
+				)
+			)
+		) {
+			$geocoder->addStatus(Geocoder::statusSkipGeocoding);
+		}
+
+		// skip geocoding
+		if(!$geocoder->hasStatus(Geocoder::statusSkipGeocoding)) {
+
+			if($geocoder->isChanged('query') && !empty($geocoder->query)) {
+				//echo "forward";
+				$this->forwardQuery($geocoder);
+				$this->message("Forward geocoding");
+			} else if(
+				($geocoder->isChanged('lat') && !empty($geocoder->lat)) ||
+				($geocoder->isChanged('lng') && !empty($geocoder->lng))
+			) {
+				//echo "reverse";
+				$this->reverseQuery($geocoder);
+				$this->message("Reverse geocoding");
+			} else {
+				//echo "no geocoding";
+				$this->message("No geocoding");
+			}
+		} else {
+			//echo "skip geocoding";
+			$this->message("Skip geocoding");
+		}
+
+		// remove skip geocoding
+		$geocoder->removeStatus(Geocoder::statusSkipGeocoding);
+
+		return [
+			'data' => $geocoder->query,
+			'formatted' => $geocoder->formatted,
+			'geodata' => json_encode($geocoder->geodata),
+			'lat' => is_numeric($geocoder->lat) ? (float) $geocoder->lat : null,
+			'lng' => is_numeric($geocoder->lng) ? (float) $geocoder->lng : null,
+			'provider' => (string) $geocoder->provider,
+			'status' => (int) $geocoder->status
+		];
+
+	}
+
+	/**
+	 * @param $text
+	 * @param array $options
+	 * @return array
+	 * @throws \Exception
+	 *
+	 * @see SearchableModule
+	 */
+	public function ___search($text, array $options = array()) {
+
+		$result = array(
+			'title' => 'Geocoder',
+			'items' => array(),
+			'properties' => ['forward', 'reverse'],
+			'total' => 0
+		);
+
+		if(!empty($options['help'])) return $result;
+
+		if($options['type'] === 'geocoder') {
+
+			$geocoder = new Geocoder();
+
+			// reverse or forward search
+			if($options['property'] === 'reverse') $this->reverseQuery($geocoder, explode(',', $text, 2));
+			else $this->forwardQuery($geocoder, $text);
+
+			/** @var \Geocoder\Collection $responds */
+			$collection = $geocoder->_collection;
+
+			if($collection instanceof \Geocoder\Collection && !$collection->isEmpty()) {
+
+				$items = [];
+				$dumper = new \Geocoder\Dumper\GeoJson();
+
+				/** @var \Geocoder\Location $location */
+				foreach($collection as $location) {
+
+					$coords = $location->getCoordinates();
+					$items[] = [
+						'title' => $location->getFormattedAddress(),
+						'name' => $dumper->dump($location),
+						'subtitle' => $coords->getLatitude() . ', ' . $coords->getLongitude(),
+						'url' => "http://m.osmtools.de/index.php?mlon={$coords->getLongitude()}&mlat={$coords->getLatitude()}&icon=5&zoom=13",
+						'icon' => 'location-arrow',
+						'group' => $location->getCountry(),
+					];
+				}
+
+				$result['items'] = $items;
+				$result['total'] = count($items);
+
+			}
+
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Method called when the field is database-queried from a $pages->find() selector
+	 *
+	 * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect
+	 * @param string $table
+	 * @param string $subfield
+	 * @param string $operator
+	 * @param string $value
+	 * @return PageFinderDatabaseQuerySelect
+	 *
+	 * @throws WireException
+	 */
+	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+
+		$table = $this->database->escapeTable($table);
+		if($subfield === 'query') $subfield = 'data';
+
+		switch($subfield) {
+
+			// Fulltext fields
+			// e.g. $pages->find('geocoder*=Berl') same as $pages->find('geocoder.data*=Berl');
+			// e.g. $pages->find('geocoder.formatted*=Germany');
+			case 'data':
+			case 'formatted':
+			case 'provider':
+
+				$ft = new DatabaseQuerySelectFulltext($query);
+				$ft->match($table, $subfield, $operator, $value);
+				return $query;
+
+			// Default fields
+			// e.g $pages->find('geocoder.lat=10.394854839, geocoder.lng>45.345345')
+			case 'lat':
+			case 'lng':
+			case 'status':
+				return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+
+			// Proximity Search
+			// use lat and lng for calculation
+			// e.g. $pages->find('geocoder.proximity=34.3453453|3.34879345, limit=3')
+			// do not user sort=xyz!
+			case 'proximity':
+
+				// Ignore second value
+				if($value === $query->selector->value[1]) return $query;
+
+				// Join
+				$query->join("field_geocoder AS $table ON $table.pages_id=pages.id");
+
+				// Ignore invalid selectors
+				if( !is_array($query->selector->value) || count($query->selector->value) !== 2 ) return $query;
+
+				// Bind lat and lng
+				$query->bindValues([
+					'lat' => (float) $query->selector->value[0] / 180 * M_PI,
+					'lng' => (float) $query->selector->value[1] / 180 * M_PI,
+				]);
+
+				// Select
+				$query->select('( 6368 * SQRT(2*( 1-cos(RADIANS(' . $table . '.lat)) * cos(:lat) * (sin(RADIANS(' . $table . '.lng)) * sin(:lng) + cos(RADIANS(' . $table . '.lng)) * cos(:lng)) - sin(RADIANS(' . $table . '.lat)) * sin(:lat)))) AS ' . $table . '_distance');
+
+				// Order by distance
+				$query->orderby($table . '_distance');
+
+				return $query;
+
+			// GEOJson Properties search
+			default :
+
+				// cast to int or float
+				if(is_numeric($value)) $value = $value*1;
+
+				// get full fieldname with dot
+				$field = substr($query->selector->field, strpos($query->selector->field, '.') + 1);
+
+				// All default comparison operators are allowed
+				if($this->database->isOperator($operator, WireDatabasePDO::operatorTypeComparison)) {
+
+					// is empty or null
+					// is not empty and not null
+					// mysql 5.7 or greater needed
+					if(!strlen($value)) {
+						if($operator === '=') {
+							$query->where("geodata->\"$.$field\" IS NULL OR geodata->\"$.$field\"='' OR geodata->\"$.$field\"=CAST('null' AS JSON)");
+						} else {
+							$query->where("geodata->\"$.$field\" IS NOT NULL AND geodata->\"$.$field\"!='' AND geodata->\"$.$field\"!=CAST('null' AS JSON)");
+						}
+					}
+
+					// is value
+					// is greater/lower than...
+					else {
+						$query->where("geodata->\"$.$field\" {$operator} ?", "$value");
+					}
+				} else {
+					throw new \mysqli_sql_exception('Invalid operator for subfield: ' . $operator);
+				}
+
+				return $query;
+		}
+
+	}
+
+	/* Geocoder */
+
+	/**
+	 * Set query and update geocoder
+	 * @param string|null $query
+	 * @return Geocoder
+	 */
+	public function forwardQuery(Geocoder $geocoder, string $query = null) {
+		if(!is_null($query)) $geocoder->set('query', $query);
+		return $this->update($geocoder);
+	}
+
+	/**
+	 * Set lat and lng and update geocoder
+	 * @param float|array|null $lat
+	 * @param float|null $lng
+	 * @return Geocoder
+	 */
+	public function reverseQuery(Geocoder $geocoder, $lat = null, float $lng = null) {
+
+		if(is_array($lat)) { $lng = $lat[1]; $lat = $lat[0]; }
+		if(!is_null($lat)) $geocoder->set('lat', $lat);
+		if(!is_null($lng)) $geocoder->set('lng', $lng);
+
+		return $this->update($geocoder, false);
+	}
+
+	/**
+	 * @param Geocoder $geocoder
+	 * @param bool $forward
+	 * @return Geocoder
+	 */
+	public function update(Geocoder $geocoder, bool $forward = true): Geocoder {
+
+		// clear and stop invalid queries
+		if(
+			($forward && empty($geocoder->query)) ||
+			(!$forward && empty($geocoder->lat) && empty($geocoder->lng))
+		) return $geocoder->clear()->addStatus(Geocoder::statusError);
+
+		// load geocoder-php
+		$this->loadGeocoderPhp();
+		$a = $this->getAdapter();
+		$p = $this->getProvider($a);
+		$g = $this->getGeocoder($p);
+
+		// query
+		$collection = $forward
+			? $g->geocodeQuery( $this->filterQuery(GeocodeQuery::create($geocoder->query)) )
+			: $g->reverseQuery( $this->filterQuery(ReverseQuery::fromCoordinates($geocoder->lat, $geocoder->lng)) )
+		;
+
+		// clear geocoder
+		list($query, $lat, $lng) = [$geocoder->query, $geocoder->lat, $geocoder->lng];
+		if($collection->isEmpty()) {
+			if($forward) $geocoder->clear()->set('query', $query);
+			else $geocoder->clear()->set('lat', $lat)->set('lng', $lng);
+
+			$geocoder->addStatus(Geocoder::statusNotFound);
+			return $geocoder;
+		}
+
+		// remove error and notfound statuses
+		if($collection->count() === 1) $geocoder->setSingleResult();
+		else $geocoder->setMultipleResults();
+
+		// tmp save collection
+		$geocoder->_collection = $collection;
+
+		// Select first location
+		$location = $collection->first();
+
+		// Basics
+		$geocoder->setArray([
+			'query' => $query,
+			'formatted' => $this->formatAddress($location),
+			'geodata' => (new GeoArray())->dump($location),
+			'provider' => $location->getProvidedBy(),
+		]);
+
+		// Set Coordinates
+		if($forward) {
+			$coordinates = $location->getCoordinates();
+			$geocoder->set('lat', $coordinates->getLatitude())->set('lng', $coordinates->getLongitude());
+		} else {
+			$geocoder->set('lat', $lat)->set('lng', $lng);
+		}
+
+		// Skip Geocoder in sleep
+		$geocoder->addStatus(Geocoder::statusSkipGeocoding);
+
+		return $geocoder;
+	}
+
+	public function ___loadGeocoderPhp() {
+		if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install geocoder-php in your the module directory.');
+		require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
+	}
+
+	/**
+	 * Get the http client (PSR-18)
+	 * @return Client
+	 */
+	public function ___getAdapter(): Client {
+		$this->loadGeocoderPhp();
+		return new Client(null, null, [
+			CURLOPT_CONNECTTIMEOUT => 2,
+			CURLOPT_SSL_VERIFYPEER => false,
+		]);
+	}
+
+	/**
+	 * @param $adapter
+	 * @return AbstractHttpProvider|OpenCage
+	 */
+	public function ___getProvider($adapter) {
+		$this->loadGeocoderPhp();
+
+		@$apiKey = $this->modules->getConfig('FieldtypeGeocoder', 'apiKey');
+		return new OpenCage($adapter, $apiKey);
+	}
+
+	/**
+	 * @param Provider $provider
+	 * @return StatefulGeocoder
+	 */
+	public function ___getGeocoder(Provider $provider): StatefulGeocoder {
+		$this->loadGeocoderPhp();
+		return new StatefulGeocoder($provider, $this->getLanguage());
+	}
+
+	/**
+	 * @param Query $query
+	 * @return Query
+	 */
+	public function ___filterQuery(Query $query) {
+		return $query;
+	}
+
+	/**
+	 * @param string $fallback
+	 * @return string
+	 */
+	public function ___getLanguage(string $fallback = 'native'): string {
+		$locale = setlocale(LC_ALL, 0);
+		$languageCode = locale_get_primary_language($locale);
+		return (!empty($languageCode) && $languageCode !== 'c') ? $languageCode : $fallback;
+	}
+
+	/**
+	 * @param Location $location
+	 * @return string
+	 */
+	public function ___formatAddress(Location $location) {
+		// Formatted Address
+		@$addressFormat = $this->get('formatterMapping');
+		
+		return str_contains($addressFormat, '%')
+			? (new StringFormatter())->format($location, $addressFormat)
+			: $location->getFormattedAddress()
+			;
+	}
+
+}

@@ -1,0 +1,109 @@
+.InputfieldGeocoder {
+	--input-height: 40px;
+	--padding: 20px;
+}
+
+.AdminThemeDefault .InputfieldGeocoder {
+	--input-height: 27px;
+	--padding: 15px;
+}
+
+.AdminThemeReno .InputfieldGeocoder {
+	--input-height: 34.6562px;
+	--padding: 15.2px;
+}
+
+/* same for all themes */
+.InputfieldGeocoder .InputfieldText .InputfieldContent { padding-bottom: 0; }
+
+/* query field */
+.InputfieldGeocoder .InputfieldText {
+	position: relative;
+}
+
+.InputfieldGeocoder .InputfieldText .description {
+	margin-top: 0;
+}
+
+.InputfieldGeocoder .InputfieldText input {
+	padding-left: 28px!important;
+	padding-right: 28px!important;
+}
+
+/* the status >> */
+.InputfieldGeocoder .InputfieldText .InputfieldGeocoderAutocompleteStatus
+{
+	position: absolute;
+	left: 6px;
+	bottom: 0;
+	opacity: .5;
+
+	height: var(--input-height);
+
+	display: flex;
+	align-items: center;
+	text-align: center;
+}
+
+/* Latlng display */
+.InputfieldGeocoder .InputfieldText .InputfieldGeocoderLatlng {
+	position: absolute;
+
+	display: flex;
+	align-items: center;
+
+	right: 32px;
+	bottom: 0;
+	height: var(--input-height);
+	opacity: .5;
+
+	pointer-events: none;
+	touch-action: none;
+	user-select: none;
+}
+
+/* clear button*/
+.InputfieldGeocoder .InputfieldText .InputfieldGeocoderAutocompleteClear {
+	position: absolute;
+	display: none;
+	appearance: none;
+	-webkit-appearance: none;
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
+	opacity: .5;
+
+	right: 0;
+	bottom: 0;
+	height: var(--input-height);
+}
+
+.InputfieldGeocoder .InputfieldText .InputfieldGeocoderAutocompleteClear:hover { opacity: 1; }
+
+
+.InputfieldGeocoderAutocompleteNote {
+	display: none;
+}
+
+/* Preview */
+.InputfieldGeocoderPreview {
+	z-index: 1;
+	padding-bottom: 50%;
+	aspect-ratio: 2/1;
+
+	margin-top: var(--padding);
+}
+
+@media (min-width: 600px) {
+	.InputfieldGeocoderPreview {
+		padding-bottom: 33.333%;
+		aspect-ratio: 3/1;
+	}
+}
+
+/* Popup */
+.leaflet-popup-content .uk-spinner {
+	display: block;
+	width: 30px;
+	margin: auto;
+}
