@@ -3,9 +3,9 @@
 
 ## What it does
 
-Store, and collect geolocation data from external geocoding services. 
-It used the great PHP Library [geocoder-php](https://github.com/geocoder-php/Geocoder) by William Durand and Tobias Nyholm and adds some processwire magic. 
-This field is inspired on the module FieldtypeMapMarker by Ryan and the FieldtypeLeafletMapMarker by mats. Thanks!
+Retrieve, collect and store geolocation data from external geocoding services. 
+Under the hood, the module uses the great PHP Library [geocoder-php](https://github.com/geocoder-php/Geocoder) by William Durand and Tobias Nyholm and adds some processwire magic. 
+Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from which we drew a lot of inspiration developing this module!
 
 
 ## Features
@@ -13,7 +13,7 @@ This field is inspired on the module FieldtypeMapMarker by Ryan and the Fieldtyp
 - Fulltext search in formatted Address
 - Proximity search
 - Search in geojson
-- Easy hookable geocoding providers ([supported providers](https://geocoder-php.org/docs/#providers))
+- Easily hookable geocoding providers ([supported providers](https://geocoder-php.org/docs/#providers))
 - Normalized geocoder object from geocoder-php
 
 
@@ -24,10 +24,9 @@ This field is inspired on the module FieldtypeMapMarker by Ryan and the Fieldtyp
    ```bash
    composer install
    ```
-3. In admin: Modules > Refresh. Install Fieldtype > Geocoder.
-4. Create a new field of type Geocoder, and name it whatever you would
-   like. In our examples we named it simply "geocoder".
-5. Add the field to a template and edit a page using that template.
+3. In processwire admin: Modules > Refresh. Install Fieldtype > Geocoder.
+4. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
+5. Add the field to a template and start geocoding!
 
 ## Requirements
 - PHP >= 7.3
@@ -139,8 +138,8 @@ ProcessWire\Geocoder Object
 
 
 ## Hooks
-You can Hook some methods to change or override the geocoding provider.
-You can find all [supported provider here](https://github.com/geocoder-php/Geocoder#providers).
+You can hook some methods to change or override the geocoding provider.
+[Here](https://github.com/geocoder-php/Geocoder#providers) you can find a full list of supported providers.
 
 1. Download, unzip provider package.
 2. Move the files in your folder struckture (```Provider.php``` and ```ProviderAddress.php```).
