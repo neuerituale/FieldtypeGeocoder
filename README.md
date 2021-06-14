@@ -29,6 +29,9 @@ This field is inspired on the module FieldtypeMapMarker by Ryan and the Fieldtyp
    like. In our examples we named it simply "geocoder".
 5. Add the field to a template and edit a page using that template.
 
+## Requirements
+- PHP >= 7.3
+- PHP Extensions: json, curl, intl
 
 ## Module Configuration
 
@@ -200,6 +203,10 @@ $wire->addHookAfter('FieldtypeGeocoder::filterQuery', function(HookEvent $event)
 	$event->return = $query;
 });
 ```
+
+## Todos
+- Update provider-string if you use the autocomplete function from the inputfield or move the marker.
+- Refactor the inputfield javascript for other maps or mapstyles
 
 ## Feedback
 

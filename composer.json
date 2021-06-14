@@ -9,10 +9,14 @@
 		}
 	],
 	"require": {
+		"php": "^7.3 || ^8.0",
 		"php-http/curl-client": "^2.2",
 		"nyholm/psr7": "^1.4",
 		"geocoder-php/open-cage-provider": "^4.5",
 		"ext-json": "*",
 		"ext-curl": "*"
+	},
+	"suggest": {
+		"ext-simplexml": "If you want to use HostIpXml"
 	}
 }
