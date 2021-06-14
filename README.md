@@ -143,14 +143,15 @@ ProcessWire\Geocoder Object
 ```
 
 
-## <a name="hook"></a>Hooks
+## <a name="hook"></a>Hooks / Change provider
 You can hook some methods to change or override the geocoding provider.
 [Here](https://github.com/geocoder-php/Geocoder#providers) you can find a full list of supported providers.
 
 1. Download, unzip provider package.
-2. Move the files in your folder struckture (```Provider.php``` and ```ProviderAddress.php```).
+2. Move the files in your folder struckture (```Provider.php``` and ```ProviderAddress.php```)*.
 3. Load all files with ```require_once()``` command.
 
+<small>*Replace "Provider" with the provider name e.g. Google or Mapbox etc.</small>
 
 ### Example 1: Google Maps Provider Package
 - [Geocoding Api](https://developers.google.com/maps/documentation/geocoding/overview) Documentation and examples
