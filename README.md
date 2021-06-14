@@ -28,9 +28,11 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
 4. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
 5. Add the field to a template and start geocoding!
 
+
 ## Requirements
 - PHP >= 7.3
 - PHP Extensions: json, curl, intl
+
 
 ## Module Configuration
 
