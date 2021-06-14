@@ -58,16 +58,19 @@ Each field can have a default map center
 
 #### Seach in input
 ```php
+// Fulltextsearch
 $pages->find('geocoder*=Berl');
 ```
 
 #### Search in formatted address
 ```php
+// Fulltextsearch
 $pages->find('geocoder.formatted*=Berlin');
 ```
 
 #### Search in properties
 ```php
+// Simplesearch
 $pages->find('geocoder.properties.timezone=Europe/Berlin');
 $pages->find('geocoder.properties.locality=Berlin');
 $pages->find('geocoder.properties.lat>10');
