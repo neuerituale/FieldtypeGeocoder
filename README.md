@@ -24,9 +24,11 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
    ```bash
    composer install
    ```
-3. In processwire admin: Modules > Refresh. Install Fieldtype > Geocoder.
-4. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
-5. Add the field to a template and start geocoding!
+3. In processwire admin: Modules > Refresh and install Fieldtype > Geocoder.
+4. Insert the api-key for your geocoding provider. The default provider is [OpenCage](https://opencagedata.com/). OpenCage use various other geocoding services. 
+   You can change the provider with a processwire hook. [read more](#hook)
+5. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
+6. Add the field to a template and start geocoding!
 
 
 ## Requirements
@@ -37,6 +39,8 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
 ## Module Configuration
 
 `Modules` > `Configure` > `FieldtypeGeocoder`
+
+Insert you api key here. The default
 
 ![Configuration](https://user-images.githubusercontent.com/11630948/121345381-13514c00-c925-11eb-85f0-f4056413f645.png)
 
@@ -139,7 +143,7 @@ ProcessWire\Geocoder Object
 ```
 
 
-## Hooks
+## <a name="hook"></a>Hooks
 You can hook some methods to change or override the geocoding provider.
 [Here](https://github.com/geocoder-php/Geocoder#providers) you can find a full list of supported providers.
 
