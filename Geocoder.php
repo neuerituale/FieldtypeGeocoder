@@ -84,6 +84,7 @@ class Geocoder extends WireData implements \JsonSerializable{
 	 * Status methods
 	 * @param $status
 	 */
+	public function setStatus($status) { $this->status = $status; return $this; }
 	public function addStatus($status) { $this->status = $this->status | $status; return $this; }
 	public function removeStatus($status) { $this->status = $this->status & ~$status; return $this; }
 	public function hasStatus($status) { return (bool) ($this->status & $status); }
@@ -91,6 +92,7 @@ class Geocoder extends WireData implements \JsonSerializable{
 	public function setSingleResult() { return $this->removeStatus(self::statusMultipleResults|self::statusNotFound)->addStatus(self::statusSingleResult); }
 	public function setMultipleResults() { return $this->removeStatus(self::statusSingleResult|self::statusNotFound)->addStatus(self::statusMultipleResults); }
 
+	public function hasResult() { return $this->isSingleResult() || $this->isMultipleResults(); }
 	public function isSingleResult() { return $this->hasStatus(self::statusSingleResult); }
 	public function isMultipleResults() { return $this->hasStatus(self::statusMultipleResults); }
 	public function isNotfound() { return $this->hasStatus(self::statusNotFound); }

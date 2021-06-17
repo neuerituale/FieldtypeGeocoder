@@ -25,7 +25,7 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
    composer install
    ```
 3. In processwire admin: Modules > Refresh and install Fieldtype > Geocoder.
-4. Insert the api-key for your geocoding provider. The default provider is [OpenCage](https://opencagedata.com/). OpenCage use various other geocoding services. 
+4. Insert the api-key for your geocoding provider. The default provider is [OpenCage](https://opencagedata.com/). OpenCage uses various other geocoding services. 
    You can change the provider with a processwire hook. [read more](#hook)
 5. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
 6. Add the field to a template and start geocoding!
@@ -151,7 +151,7 @@ You can hook some methods to change or override the geocoding provider.
 [Here](https://github.com/geocoder-php/Geocoder#providers) you can find a full list of supported providers.
 
 1. Download, unzip provider package.
-2. Move the files in your folder struckture (```Provider.php``` and ```ProviderAddress.php```)*.
+2. Move the files in your folder structure (```Provider.php``` and ```ProviderAddress.php```)*.
 3. Load all files with ```require_once()``` command.
 
 <small>*Replace "Provider" with the provider name e.g. Google or Mapbox etc.</small>
