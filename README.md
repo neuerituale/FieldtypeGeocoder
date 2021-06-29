@@ -216,6 +216,7 @@ $wire->addHookAfter('FieldtypeGeocoder::filterQuery', function(HookEvent $event)
 ## Todos
 - Update provider-string if you use the autocomplete function from the inputfield or move the marker.
 - Refactor the inputfield javascript for other maps or mapstyles
+- Add warnings if a vendor package is not found!
 
 ## Feedback
 

@@ -1,0 +1,79 @@
+<?php namespace ProcessWire;
+
+use GraphQL\Type\Definition\Type;
+use GraphQL\Type\Definition\ObjectType;
+
+class GraphQLFieldtypeGeocoder extends WireData implements Module {
+
+	/**
+	 * Get module information
+	 * @return array
+	 */
+	public static function getModuleInfo() {
+
+		return array(
+			'title' => 'GraphQLFieldtypeGeocoder',
+			'version' => 100,
+			'summary' => 'GraphQL support for FieldtypeGeocoder.',
+			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
+			'icon' => 'globe',
+			'requires' => ['ProcessGraphQL']
+		);
+	}
+
+	public static function getType(Field $field)
+	{
+		return new ObjectType([
+			'name' => 'Geocoder',
+			'fields' => [
+
+				'status' => [
+					'type' => Type::int(),
+					'resolve' => function($value) { return (int) $value->status; }
+				],
+
+				'formatted' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->formatted; }
+				],
+
+				'query' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->query; }
+				],
+
+				'geodata' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) json_encode($value->geodata); }
+				],
+
+				'lat' => [
+					'type' => Type::float(),
+					'resolve' => function($value) { return is_numeric($value->lat) ? $value->lat : null; }
+				],
+
+				'lng' => [
+					'type' => Type::float(),
+					'resolve' => function($value) { return is_numeric($value->lng) ? $value->lng : null; }
+				],
+
+				'provider' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->provider; }
+				],
+
+			],
+		]);
+	}
+
+	public static function getInputType(Field $field)
+	{
+		return Type::string();
+	}
+
+	public static function setValue(Page $page, Field $field, $value)
+	{
+		$fieldName = $field->name;
+		$page->$fieldName = $value;
+	}
+}
