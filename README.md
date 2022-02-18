@@ -15,6 +15,7 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
 - Search in geojson
 - Easily hookable geocoding providers ([supported providers](https://geocoder-php.org/docs/#providers))
 - Normalized geocoder object from geocoder-php
+- Supports The [GraphQL-Module](https://processwire.com/modules/process-graph-ql/) form *dadish*
 
 
 ## Installation
@@ -29,7 +30,7 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
    You can change the provider with a processwire hook. [read more](#hook)
 5. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
 6. Add the field to a template and start geocoding!
-
+- For GraphQL install the moduel `GraphQLFieldtypeGeocoder`
 
 ## Requirements
 - PHP >= 7.3
