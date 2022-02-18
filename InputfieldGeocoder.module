@@ -10,7 +10,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Geocoder',
-			'version' => 100,
+			'version' => 101,
 			'summary' => 'Inputfield for FieldtypeGeocoder.',
 			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',

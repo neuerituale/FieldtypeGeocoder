@@ -40,7 +40,7 @@ class FieldtypeGeocoderConfig extends ModuleConfig
 			'type' => 'text',
 			'name' => 'apiKey',
 			'label' => __('ApiKey'),
-			'description' => __('ApiKey for your geocode provider')
+			'description' => __('ApiKey for your geocode provider. Default geocoder is [OpenCache](https://opencagedata.com/users/sign_up)')
 		]);
 
 		$inputfields->add([

@@ -25,9 +25,9 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Geocoder',
-			'version' => 100,
+			'version' => 101,
 			'summary' => 'Collect and store Geocode information from several providers',
-			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
+			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',
 			'installs' => 'InputfieldGeocode',
 			'searchable' => 'geocoder'

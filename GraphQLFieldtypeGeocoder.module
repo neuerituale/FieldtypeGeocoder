@@ -13,7 +13,7 @@ class GraphQLFieldtypeGeocoder extends WireData implements Module {
 
 		return array(
 			'title' => 'GraphQLFieldtypeGeocoder',
-			'version' => 100,
+			'version' => 101,
 			'summary' => 'GraphQL support for FieldtypeGeocoder.',
 			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',

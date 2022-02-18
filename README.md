@@ -177,7 +177,7 @@ $wire->addHookBefore('FieldtypeGeocoder::getProvider', function(HookEvent $event
 
 ### Example 2: Mapbox Search Provider Package
 - [Geocoding Api](https://docs.mapbox.com/api/search/geocoding/) Documentation and examples
-- [Playground](https://docs.mapbox.com/api/search/geocoding/) Playground (👍)
+- [Playground](https://docs.mapbox.com/search-playground/) Playground (👍)
 - [Access Tokens](https://account.mapbox.com/access-tokens/) Create and manage your keys
 
 ```php
@@ -217,6 +217,7 @@ $wire->addHookAfter('FieldtypeGeocoder::filterQuery', function(HookEvent $event)
 - Update provider-string if you use the autocomplete function from the inputfield or move the marker.
 - Refactor the inputfield javascript for other maps or mapstyles
 - Add warnings if a vendor package is not found!
+- Add warning if api key is empty
 
 ## Feedback
 
