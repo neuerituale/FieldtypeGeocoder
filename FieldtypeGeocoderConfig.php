@@ -51,40 +51,6 @@ class FieldtypeGeocoderConfig extends ModuleConfig
 			'description' => __('Format the geocoded data. Leave empty or "native" for default formatting. Here is the mapping: [Geocoder-PHP Formatter](https://geocoder-php.org/docs/#formatters)')
 		]);
 
-		$inputfields->add([
-			'type' => 'text',
-			'name' => 'css',
-			'label' => __('CSS File for Inputfield'),
-			'notes' => __('When blank, the default file used'),
-			'description' => __('Enter path relative to homepage URL'),
-			'columnWidth' => 50
-		]);
-
-		$inputfields->add([
-			'type' => 'text',
-			'name' => 'script',
-			'label' => __('Script File for Inputfield'),
-			'notes' => __('When blank, the default file used'),
-			'description' => __('Enter path relative to homepage URL'),
-			'columnWidth' => 50
-		]);
-
-		$inputfields->add([
-			'type' => 'checkbox',
-			'name' => 'loadLeafletCss',
-			'label' => __('Load leaflet css file'),
-			'notes' => $this->libCss,
-			'columnWidth' => 50
-		]);
-
-		$inputfields->add([
-			'type' => 'checkbox',
-			'name' => 'loadLeafletScript',
-			'label' => __('Load leaflet script file'),
-			'notes' => $this->libScript,
-			'columnWidth' => 50
-		]);
-
 		return $inputfields;
 	}
 }

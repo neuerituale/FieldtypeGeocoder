@@ -43,20 +43,20 @@
 		t.init = function() {
 
 			// Form
-			t.$query = t.$el.find('.Inputfield_geocoderQuery input');
+			t.$query = t.$el.find('.InputfieldGeocoderQuery');
 
 			t.$description = t.$el.find(".InputfieldText .description");
-			t.$formatted = t.$el.find('.Inputfield_geocoderFormatted input');
+			t.$formatted = t.$el.find('.InputfieldGeocoderFormatted');
 			t.formatted = t.$formatted.val();
 
-			t.$provider = t.$el.find('.Inputfield_geocoderProvider input');
-			t.$status = t.$el.find('.Inputfield_geocoderStatus input');
+			t.$provider = t.$el.find('.InputfieldGeocoderProvider');
+			t.$status = t.$el.find('.InputfieldGeocoderStatus');
 			t.status = parseInt(t.$status.val());
 
-			t.$lat = t.$el.find('.Inputfield_geocoderLat input');
-			t.$lng = t.$el.find('.Inputfield_geocoderLng input');
+			t.$lat = t.$el.find('.InputfieldGeocoderLat');
+			t.$lng = t.$el.find('.InputfieldGeocoderLng');
 
-			t.$geojson = t.$el.find('.Inputfield_geocoderGeojson input');
+			t.$geojson = t.$el.find('.InputfieldGeocoderGeojson');
 			t.geojson = JSON.parse( t.$geojson.val() );
 
 			t.ajaxurl = t.$el.data('ajaxurl');
@@ -115,10 +115,16 @@
 
 			var zoom = t.helper.validGeojson(this.geojson) ? t.options.detailZoom : t.options.initialZoom;
 
+			if(!window.hasOwnProperty('L')) return this;
+
+			// init map
 			t.map = L.map( t.$preview[0], { scrollWheelZoom: false } ).setView(center, zoom);
 			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			}).addTo(t.map);
+
+			// customize icon
+			L.Icon.Default.prototype.options.imagePath = '/site/modules/FieldtypeGeocoder/assets/leaflet@1.7.1/images/'
 
 			return this;
 		}
@@ -382,7 +388,6 @@
 					pointToLayer: function(geoJsonPoint, latlng) {
 
 						var popupContent = t.helper.popupContent(preview);
-
 						return L.marker(latlng, { draggable: true })
 							.bindPopup(popupContent, {
 								closeButton: false,
@@ -560,5 +565,23 @@
 
 // RUN
 $(function() {
+
+	if(window.hasOwnProperty('L') && L.hasOwnProperty('map')) {
+		// map already loaded
+	}
+	else {
+		const script = document.createElement("script");
+		script.type = "text/javascript";
+		script.src = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.7.1/leaflet.js";
+		$("head").append(script);
+
+		const link = document.createElement("link");
+		link.type = "text/css";
+		link.rel = "stylesheet";
+		link.href = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.7.1/leaflet.css";
+		$("head").append(link);
+	}
+
 	$('.InputfieldGeocoder').inputfieldgeocode();
+
 });

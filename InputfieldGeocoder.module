@@ -10,7 +10,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Geocoder',
-			'version' => 101,
+			'version' => 102,
 			'summary' => 'Inputfield for FieldtypeGeocoder.',
 			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',
@@ -30,6 +30,15 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	 */
 	public function ___render() {
 
+		if($this->page->template->name === 'admin') {
+			$this->prependMarkup = "<script>
+				$(function() {
+					const jQueryField = $('#{$this->id}');
+					if(undefined === jQueryField.data('inputfieldgeocode')) {
+						jQueryField.data('inputfieldgeocode', new $.InputfieldGeocode(jQueryField));
+					}
+			});</script>";
+		}
 
 		// Get value and set defaults
 		/** @var Geocoder $geocoder */
@@ -39,24 +48,12 @@ class InputfieldGeocoder extends InputfieldWrapper {
 		if(!($geocoder instanceof Geocoder)) $geocoder = new Geocoder();
 		if(is_null($this->get('hasFieldtype'))) $this->set('hasFieldtype', $this->modules->get('FieldtypeGeocoder'));
 
-		// Add scripts and styles
-		/** @var FieldtypeGeocoder $fieldtype */
-		$fieldtype = $this->get('hasFieldtype');
-		if($fieldtype instanceof FieldtypeGeocoder) {
-
-			if($fieldtype->loadLeafletCss) $this->config->styles->add($fieldtype->libCss);
-			if($fieldtype->loadLeafletScript) $this->config->scripts->add($fieldtype->libScript);
-
-			$this->config->styles->add($fieldtype->css ? $this->sanitizePath($fieldtype->css) : $this->config->urls->InputfieldGeocoder . "assets/InputfieldGeocoder.css");
-			$this->config->scripts->add($fieldtype->script ? $this->sanitizePath($fieldtype->script) : $this->config->urls->InputfieldGeocoder . "assets/InputfieldGeocoder.js");
-		}
-
 		// Add Subfields
 		$this->add([
-			'type' => 'text',
-			'name' => 'geocoderQuery',
+			'type' => 'Text',
+			'name' => $this->attr('name') . '_query',
 			'themeBorder' => 'none',
-			'class' => 'InputfieldGeocoderAutocomplete',
+			'class' => 'InputfieldGeocoderQuery InputfieldGeocoderAutocomplete',
 			'value' => $geocoder->query,
 			'useLanguages' => false,
 			'skipLabel' => Inputfield::skipLabelMarkup,
@@ -66,44 +63,51 @@ class InputfieldGeocoder extends InputfieldWrapper {
 		]);
 
 		$this->add([
-			'type' => 'hidden',
-			'name' => 'geocoderFormatted',
+			'type' => 'Hidden',
+			'name' => $this->attr('name') . '_formatted',
+			'class' => 'InputfieldGeocoderFormatted',
 			'value' => $geocoder->formatted
 		]);
 
 		$this->add([
-			'type' => 'hidden',
-			'name' => 'geocoderProvider',
+			'type' => 'Hidden',
+			'name' => $this->attr('name') . '_provider',
+			'class' => 'InputfieldGeocoderProvider',
 			'value' => $geocoder->provider
 		]);
 
 		$this->add([
-			'type' => 'hidden',
-			'name' => 'geocoderStatus',
+			'type' => 'Hidden',
+			'name' => $this->attr('name') . '_status',
+			'class' => 'InputfieldGeocoderStatus',
 			'value' => $geocoder->status
 		]);
 
 		$this->add([
-			'type' => 'hidden',
-			'name' => 'geocoderLat',
+			'type' => 'Hidden',
+			'name' => $this->attr('name') . '_lat',
+			'class' => 'InputfieldGeocoderLat',
 			'value' => is_numeric($geocoder->lat) ? json_encode($geocoder->lat) : ''
 		]);
 
 		$this->add([
-			'type' => 'hidden',
-			'name' => 'geocoderLng',
+			'type' => 'Hidden',
+			'name' => $this->attr('name') . '_lng',
+			'class' => 'InputfieldGeocoderLng',
 			'value' => is_numeric($geocoder->lng) ? json_encode($geocoder->lng) : ''
 		]);
 
 		$this->add([
-			'type' => 'hidden',
-			'name' => 'geocoderGeojson',
+			'type' => 'Hidden',
+			'name' => $this->attr('name') . '_geojson',
+			'class' => 'InputfieldGeocoderGeojson',
 			'value' => $geocoder->geodata ? json_encode($geocoder->geodata) : '{}'
 		]);
 
 		// Add notes or preview and set initial description value
 		$this->appendMarkup("<div class='InputfieldGeocoderPreview'></div>");
-		$queryField = $this->get('geocoderQuery');
+		$queryField = $this->get($this->attr('name') . '_query');
+
 		if($geocoder->hasStatus(Geocoder::statusNotFound)) $queryField->description = '*' . __('Geoinformation not found') . '*';
 		else if(strlen($geocoder->formatted)) $queryField->description = $geocoder->formatted;
 		else $queryField->description = '*' . __('Start typing address for searching ...') . '*';
@@ -141,13 +145,13 @@ class InputfieldGeocoder extends InputfieldWrapper {
 		}
 
 		$geocoder->setArray([
-			'status' => $input->int('geocoderStatus'),
-			'formatted' => $input->text('geocoderFormatted'),
-			'query' => $input->text('geocoderQuery'),
-			'geodata' => json_decode($input->get('geocoderGeojson'), JSON_OBJECT_AS_ARRAY),
-			'lat' => $input->get('geocoderLat'), // will be sanitized in setter method
-			'lng' => $input->get('geocoderLng'), // will be sanitized in setter method
-			'provider' => $input->text('geocoderProvider')
+			'status' => $input->int($this->attr('name') . '_status'),
+			'formatted' => $input->text($this->attr('name') . '_formatted'),
+			'query' => $input->text($this->attr('name') . '_query'),
+			'geodata' => json_decode($input->get($this->attr('name') . '_geojson'), JSON_OBJECT_AS_ARRAY),
+			'lat' => $input->get($this->attr('name') . '_lat'), // will be sanitized in setter method
+			'lng' => $input->get($this->attr('name') . '_lng'), // will be sanitized in setter method
+			'provider' => $input->text($this->attr('name') . '_provider')
 		]);
 
 		// propagate change to field

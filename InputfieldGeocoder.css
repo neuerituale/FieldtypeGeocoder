@@ -21,6 +21,8 @@
 	position: relative;
 }
 
+.InputfieldGeocoder .InputfieldText > .InputfieldContent { padding: 0!important; }
+
 .InputfieldGeocoder .InputfieldText .description {
 	margin-top: 0;
 }
