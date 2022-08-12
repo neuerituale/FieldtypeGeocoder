@@ -157,7 +157,7 @@
 
 						response($.map(data.matches, function(match) {
 							var item = t.helper.match2item(match);
-								item.total = data.matches.length;
+							item.total = data.matches.length;
 							return item;
 						}));
 					});
@@ -216,7 +216,7 @@
 				if(data?.matches?.length) {
 
 					var item = data.matches[0];
-						item.total = data.matches.length;
+					item.total = data.matches.length;
 
 					t.setItem(
 						t.helper.match2item( item ),
@@ -541,7 +541,7 @@
 		}
 
 		// Run
-		t.init();
+		setTimeout(function (){ t.init(); }, 200);
 	};
 
 	/**

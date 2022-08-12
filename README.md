@@ -90,7 +90,7 @@ $pages->find('geocoder.proximity=52.473758|13.402580, limit=3');
  * @see Geocoder::statusMultipleResults
  */
 $pages->find('geocoder.status=3'); // Status "On" and "SingleResult"
-$pages->find('geocoder.status&2|4'); // Status "SingleResult" and "MultipleResults"
+$pages->find('geocoder.status&2|4'); // Status "SingleResult" or "MultipleResults"
 ```
 
 
