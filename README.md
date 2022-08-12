@@ -15,7 +15,7 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
 - Search in geojson
 - Easily hookable geocoding providers ([supported providers](https://geocoder-php.org/docs/#providers))
 - Normalized geocoder object from geocoder-php
-- Supports The [GraphQL-Module](https://processwire.com/modules/process-graph-ql/) form *dadish*
+- Supports The [GraphQL-Module](https://processwire.com/modules/process-graph-ql/) by *dadish*
 
 
 ## Installation
@@ -77,9 +77,20 @@ $pages->find('geocoder.properties.locality=Berlin');
 $pages->find('geocoder.properties.lat>10');
 ```
 
-#### Seach and order by proximity
+#### Search and order by proximity
 ```php
 $pages->find('geocoder.proximity=52.473758|13.402580, limit=3');
+```
+
+#### Search by status
+```php
+/** 
+ * @see Geocoder::statusOn
+ * @see Geocoder::statusSingleResult
+ * @see Geocoder::statusMultipleResults
+ */
+$pages->find('geocoder.status=3'); // Status "On" and "SingleResult"
+$pages->find('geocoder.status&2|4'); // Status "SingleResult" and "MultipleResults"
 ```
 
 

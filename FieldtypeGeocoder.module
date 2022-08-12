@@ -1,14 +1,16 @@
 <?php
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2021 Neue Rituale GbR
+ * Copyright (c) 2022 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
 namespace ProcessWire;
 
 use Essence\Http\Exception;
+use Geocoder\Collection;
 use Geocoder\Dumper\GeoArray;
+use Geocoder\Dumper\GeoJson;
 use Geocoder\Formatter\StringFormatter;
 use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Location;
@@ -25,7 +27,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Geocoder',
-			'version' => 102,
+			'version' => 103,
 			'summary' => 'Collect and store Geocode information from several providers',
 			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',
@@ -68,7 +70,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 *
 	 * @param Page $page
 	 * @param Field $field
-	 * @return \ProcessWire\Geocoder
+	 * @return Geocoder
 	 *
 	 */
 	public function getBlankValue(Page $page, Field $field) {
@@ -229,15 +231,15 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 			if($options['property'] === 'reverse') $this->reverseQuery($geocoder, explode(',', $text, 2));
 			else $this->forwardQuery($geocoder, $text);
 
-			/** @var \Geocoder\Collection $responds */
+			/** @var Collection $responds */
 			$collection = $geocoder->_collection;
 
-			if($collection instanceof \Geocoder\Collection && !$collection->isEmpty()) {
+			if($collection instanceof Collection && !$collection->isEmpty()) {
 
 				$items = [];
-				$dumper = new \Geocoder\Dumper\GeoJson();
+				$dumper = new GeoJson();
 
-				/** @var \Geocoder\Location $location */
+				/** @var Location $location */
 				foreach($collection as $location) {
 
 					$coords = $location->getCoordinates();
@@ -295,8 +297,24 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 			// e.g $pages->find('geocoder.lat=10.394854839, geocoder.lng>45.345345')
 			case 'lat':
 			case 'lng':
-			case 'status':
 				return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+
+			// Status search (support bitwise)
+			// e.g $pages->find('geocoder.status=3')
+			// e.g $pages->find('geocoder.status&2|4')
+			case 'status':
+
+				// normal operator
+				if(!$this->database->isOperator($operator, WireDatabasePDO::operatorTypeBitwise))
+					return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+
+				/** @var Database $database */
+				$database = $this->wire()->database;
+				$table = $database->escapeTable($table);
+				$subfield = $database->escapeCol($subfield);
+				$query->where("{$table}.{$subfield}{$operator}?", (int) $value);
+
+				return $query;
 
 			// Proximity Search
 			// use lat and lng for calculation
@@ -520,7 +538,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	public function ___formatAddress(Location $location) {
 		// Formatted Address
 		@$addressFormat = $this->get('formatterMapping');
-		
+
 		return str_contains($addressFormat, '%')
 			? (new StringFormatter())->format($location, $addressFormat)
 			: $location->getFormattedAddress()
