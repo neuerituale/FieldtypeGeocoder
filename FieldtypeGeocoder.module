@@ -493,7 +493,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 
 	public function ___loadGeocoderPhp() {
 		// check global geocoder class and include autoload
-		if(!class_exists("\Geocoder\Geocoder")) {
+		if(!class_exists("\Geocoder\StatefulGeocoder")) {
 			if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install geocoder-php in your the module directory.');
 			require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
 		}

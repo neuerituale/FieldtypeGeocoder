@@ -33,10 +33,16 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
    You can change the provider with a processwire hook. [read more](#hook)
 5. Create a new field of type Geocoder, and name it whatever you like. In our examples we named it simply "geocoder".
 6. Add the field to a template and start geocoding!
-- For GraphQL install the moduel `GraphQLFieldtypeGeocoder`
+- For GraphQL install the modul `GraphQLFieldtypeGeocoder`
+
+## Install via composer
+1. Execute the following command in your website root directory.
+   ```bash
+   composer require nr/fieldtypegeocoder
+   ```
 
 ## Requirements
-- PHP >= 7.3
+- PHP >= 7.4
 - PHP Extensions: json, curl, intl
 
 
@@ -166,8 +172,8 @@ You can hook some methods to change or override the geocoding provider.
 [Here](https://github.com/geocoder-php/Geocoder#providers) you can find a full list of supported providers.
 
 1. Download, unzip provider package.
-2. Move the files in your folder structure (```Provider.php``` and ```ProviderAddress.php```)*.
-3. Load all files with ```require_once()``` command.
+2. Move the files in your folder structure (`Provider.php` and `ProviderAddress.php`)*.
+3. Load all files with `require_once()` command.
 
 <small>*Replace "Provider" with the provider name e.g. Google or Mapbox etc.</small>
 
