@@ -1,18 +1,16 @@
-<?php namespace ProcessWire;
+<?php
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
 
-use Geocoder\Collection;
-use Geocoder\Dumper\GeoArray;
-use Geocoder\Dumper\GeoJson;
-use Geocoder\Formatter\StringFormatter;
+namespace ProcessWire;
+
 use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Location;
-use Geocoder\Provider\OpenCage\OpenCage;
-use Geocoder\Provider\Provider;
-use Geocoder\Query\GeocodeQuery;
-use Geocoder\Query\ReverseQuery;
 use Geocoder\StatefulGeocoder;
 use Http\Client\Curl\Client;
-use Http\Client\HttpClient;
 
 /**
  * FieldtypeGeocoder: Geocoder
@@ -24,7 +22,7 @@ use Http\Client\HttpClient;
  * @method string formatAddress(Location $location)
  * @method string getLanguage(string $fallback = 'en')
  */
-class Geocoder extends WireData implements \JsonSerializable{
+class Geocoder extends WireData implements \JsonSerializable {
 
 	const statusOn = 1;
 	const statusSingleResult = 2;
@@ -47,7 +45,7 @@ class Geocoder extends WireData implements \JsonSerializable{
 	 * Clear Wire Data
 	 * @return $this
 	 */
-	public function clear() {
+	public function clear(): Geocoder {
 
 		$this->data = array();
 
@@ -55,7 +53,7 @@ class Geocoder extends WireData implements \JsonSerializable{
 			'status' => self::statusOn,
 			'formatted' => '',
 			'query' => '',
-			'geodata' => new \stdClass(),
+			'geodata' => [],
 			'lat' => '',
 			'lng' => '',
 			'provider' => ''
@@ -69,7 +67,7 @@ class Geocoder extends WireData implements \JsonSerializable{
 	 * @param mixed $value
 	 * @return Geocoder
 	 */
-	public function set($key, $value) {
+	public function set($key, $value): Geocoder {
 
 		if($key === 'lat') {
 			$value = is_numeric($value) ? $this->sanitizer->range($value, -90.0, 90.0) : '';
@@ -80,28 +78,34 @@ class Geocoder extends WireData implements \JsonSerializable{
 		return parent::set($key, $value);
 	}
 
+	public function get($key) {
+		if($key === 'coordinates') return [$this->lng, $this->lat];
+		return parent::get($key);
+	}
+
 	/**
 	 * Status methods
 	 * @param $status
+	 * @return Geocoder
 	 */
-	public function setStatus($status) { $this->status = $status; return $this; }
-	public function addStatus($status) { $this->status = $this->status | $status; return $this; }
-	public function removeStatus($status) { $this->status = $this->status & ~$status; return $this; }
-	public function hasStatus($status) { return (bool) ($this->status & $status); }
+	public function setStatus($status): Geocoder { $this->status = $status; return $this; }
+	public function addStatus($status): Geocoder { $this->status = $this->status | $status; return $this; }
+	public function removeStatus($status): Geocoder { $this->status = $this->status & ~$status; return $this; }
+	public function hasStatus($status): bool { return (bool) ($this->status & $status); }
 
-	public function setSingleResult() { return $this->removeStatus(self::statusMultipleResults|self::statusNotFound)->addStatus(self::statusSingleResult); }
-	public function setMultipleResults() { return $this->removeStatus(self::statusSingleResult|self::statusNotFound)->addStatus(self::statusMultipleResults); }
+	public function setSingleResult(): Geocoder { return $this->removeStatus(self::statusMultipleResults|self::statusNotFound)->addStatus(self::statusSingleResult); }
+	public function setMultipleResults(): Geocoder { return $this->removeStatus(self::statusSingleResult|self::statusNotFound)->addStatus(self::statusMultipleResults); }
 
-	public function hasResult() { return $this->isSingleResult() || $this->isMultipleResults(); }
-	public function isSingleResult() { return $this->hasStatus(self::statusSingleResult); }
-	public function isMultipleResults() { return $this->hasStatus(self::statusMultipleResults); }
-	public function isNotfound() { return $this->hasStatus(self::statusNotFound); }
+	public function hasResult(): bool { return $this->isSingleResult() || $this->isMultipleResults(); }
+	public function isSingleResult(): bool { return $this->hasStatus(self::statusSingleResult); }
+	public function isMultipleResults(): bool { return $this->hasStatus(self::statusMultipleResults); }
+	public function isNotfound(): bool { return $this->hasStatus(self::statusNotFound); }
 
 	/**
 	 * Render
 	 * @return mixed|null
 	 */
-	public function render() {
+	public function render(): mixed {
 		return $this->get('formatted');
 	}
 
@@ -114,9 +118,10 @@ class Geocoder extends WireData implements \JsonSerializable{
 	}
 
 	/**
-	 * @return array|mixed
+	 * @return array
 	 */
-	public function jsonSerialize() {
+	#[ReturnTypeWillChange]
+	public function jsonSerialize(): array {
 		return $this->getArray();
 	}
 

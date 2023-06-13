@@ -1,4 +1,11 @@
-<?php namespace ProcessWire;
+<?php
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
+
+namespace ProcessWire;
 
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\ObjectType;
@@ -9,20 +16,17 @@ class GraphQLFieldtypeGeocoder extends WireData implements Module {
 	 * Get module information
 	 * @return array
 	 */
-	public static function getModuleInfo() {
-
-		return array(
+	public static function getModuleInfo(): array {
+		return [
 			'title' => 'GraphQLFieldtypeGeocoder',
-			'version' => 101,
+			'version' => 104,
 			'summary' => 'GraphQL support for FieldtypeGeocoder.',
-			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',
 			'requires' => ['ProcessGraphQL']
-		);
+		];
 	}
 
-	public static function getType(Field $field)
-	{
+	public static function getType(Field $field): ObjectType {
 		return new ObjectType([
 			'name' => 'Geocoder',
 			'fields' => [
@@ -61,18 +65,15 @@ class GraphQLFieldtypeGeocoder extends WireData implements Module {
 					'type' => Type::string(),
 					'resolve' => function($value) { return (string) $value->provider; }
 				],
-
 			],
 		]);
 	}
 
-	public static function getInputType(Field $field)
-	{
+	public static function getInputType(Field $field): \GraphQL\Type\Definition\ScalarType {
 		return Type::string();
 	}
 
-	public static function setValue(Page $page, Field $field, $value)
-	{
+	public static function setValue(Page $page, Field $field, $value): void {
 		$fieldName = $field->name;
 		$page->$fieldName = $value;
 	}

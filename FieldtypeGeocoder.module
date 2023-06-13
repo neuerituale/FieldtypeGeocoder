@@ -1,13 +1,12 @@
 <?php
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
 namespace ProcessWire;
 
-use Essence\Http\Exception;
 use Geocoder\Collection;
 use Geocoder\Dumper\GeoArray;
 use Geocoder\Dumper\GeoJson;
@@ -22,21 +21,32 @@ use Geocoder\Query\ReverseQuery;
 use Geocoder\StatefulGeocoder;
 use Http\Client\Curl\Client;
 
+/**
+ * @method array search($text, array $options = array())
+ * @method void loadGeocoderPhp()
+ * @method Client getAdapter()
+ * @method AbstractHttpProvider|OpenCage getProvider($adapter)
+ * @method StatefulGeocoder getGeocoder(Provider $provider)
+ * @method Query filterQuery(Query $query)
+ * @method string getLanguage(string $fallback = 'native')
+ * @method string formatAddress(Location $location)
+ */
+
 class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule {
 
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Geocoder',
-			'version' => 103,
+			'version' => 104,
 			'summary' => 'Collect and store Geocode information from several providers',
 			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',
-			'installs' => 'InputfieldGeocode',
+			'installs' => 'InputfieldGeocoder',
 			'searchable' => 'geocoder'
 		);
 	}
 
-	public function init() {
+	public function init(): void {
 		require_once(__DIR__ . '/Geocoder.php');
 	}
 
@@ -44,7 +54,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param Field $field
 	 * @return array
 	 */
-	public function getDatabaseSchema(Field $field) {
+	public function getDatabaseSchema(Field $field): array {
 
 		$schema = parent::getDatabaseSchema($field);
 		$schema['data'] = 'VARCHAR(255) NOT NULL DEFAULT ""';
@@ -60,6 +70,8 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 
 	/**
 	 * Return the Inputfield used to collect input for a field of this type
+	 * @throws WirePermissionException
+	 * @return Module|_Module|null
 	 */
 	public function getInputfield(Page $page, Field $field) {
 		return $this->modules->get('InputfieldGeocoder');
@@ -73,7 +85,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @return Geocoder
 	 *
 	 */
-	public function getBlankValue(Page $page, Field $field) {
+	public function getBlankValue(Page $page, Field $field): Geocoder {
 		return new Geocoder();
 	}
 
@@ -84,7 +96,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param int|object|WireArray|string $value
 	 * @return Geocoder
 	 */
-	public function sanitizeValue(Page $page, Field $field, $value) {
+	public function sanitizeValue(Page $page, Field $field, $value): Geocoder {
 
 		/** @var Geocoder $geocoder */
 		$geocoder = $value;
@@ -102,9 +114,9 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param Page $page
 	 * @param Field $field
 	 * @param array|int|string $value
-	 * @return array|int|mixed|object|string
+	 * @return Geocoder
 	 */
-	public function ___wakeupValue(Page $page, Field $field, $value) {
+	public function ___wakeupValue(Page $page, Field $field, $value): Geocoder {
 
 		$geocoder = $this->getBlankValue($page, $field);
 
@@ -130,8 +142,9 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param Field $field
 	 * @param array|float|int|object|string $value
 	 * @return array
+	 * @throws WireException
 	 */
-	public function ___sleepValue(Page $page, Field $field, $value) {
+	public function ___sleepValue(Page $page, Field $field, $value): array {
 
 		/** @var Geocoder $geocoder */
 		$geocoder = $value;
@@ -212,7 +225,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 *
 	 * @see SearchableModule
 	 */
-	public function ___search($text, array $options = array()) {
+	public function ___search($text, array $options = array()): array {
 
 		$result = array(
 			'title' => 'Geocoder',
@@ -266,7 +279,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	/**
 	 * Method called when the field is database-queried from a $pages->find() selector
 	 *
-	 * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect
+	 * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect $query
 	 * @param string $table
 	 * @param string $subfield
 	 * @param string $operator
@@ -275,7 +288,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 *
 	 * @throws WireException
 	 */
-	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+	public function getMatchQuery($query, $table, $subfield, $operator, $value): PageFinderDatabaseQuerySelect {
 
 		$table = $this->database->escapeTable($table);
 		if($subfield === 'query') $subfield = 'data';
@@ -386,21 +399,23 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 
 	/**
 	 * Set query and update geocoder
+	 * @param Geocoder $geocoder
 	 * @param string|null $query
 	 * @return Geocoder
 	 */
-	public function forwardQuery(Geocoder $geocoder, string $query = null) {
+	public function forwardQuery(Geocoder $geocoder, string $query = null): Geocoder {
 		if(!is_null($query)) $geocoder->set('query', $query);
 		return $this->update($geocoder);
 	}
 
 	/**
 	 * Set lat and lng and update geocoder
+	 * @param Geocoder $geocoder
 	 * @param float|array|null $lat
 	 * @param float|null $lng
 	 * @return Geocoder
 	 */
-	public function reverseQuery(Geocoder $geocoder, $lat = null, float $lng = null) {
+	public function reverseQuery(Geocoder $geocoder, $lat = null, float $lng = null): Geocoder {
 
 		if(is_array($lat)) { $lng = $lat[1]; $lat = $lat[0]; }
 		if(!is_null($lat)) $geocoder->set('lat', $lat);
@@ -477,8 +492,11 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	}
 
 	public function ___loadGeocoderPhp() {
-		if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install geocoder-php in your the module directory.');
-		require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
+		// check global geocoder class and include autoload
+		if(!class_exists("\Geocoder\Geocoder")) {
+			if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install geocoder-php in your the module directory.');
+			require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
+		}
 	}
 
 	/**
@@ -499,9 +517,10 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 */
 	public function ___getProvider($adapter) {
 		$this->loadGeocoderPhp();
-
-		@$apiKey = $this->modules->getConfig('FieldtypeGeocoder', 'apiKey');
-		return new OpenCage($adapter, $apiKey);
+		return new OpenCage(
+			$adapter,
+			$this->modules->getConfig('FieldtypeGeocoder', 'apiKey') ?? ''
+		);
 	}
 
 	/**
@@ -517,7 +536,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param Query $query
 	 * @return Query
 	 */
-	public function ___filterQuery(Query $query) {
+	public function ___filterQuery(Query $query): Query {
 		return $query;
 	}
 
@@ -535,10 +554,9 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param Location $location
 	 * @return string
 	 */
-	public function ___formatAddress(Location $location) {
+	public function ___formatAddress(Location $location): string {
 		// Formatted Address
-		@$addressFormat = $this->get('formatterMapping');
-
+		$addressFormat = $this->get('formatterMapping') ?? '';
 		return str_contains($addressFormat, '%')
 			? (new StringFormatter())->format($location, $addressFormat)
 			: $location->getFormattedAddress()

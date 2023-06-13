@@ -1,21 +1,30 @@
-<?php namespace ProcessWire;
+<?php
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
+
+namespace ProcessWire;
 
 /**
  * Collects input for InputfieldGeocoder fields
+ * @method string render()
+ * @method InputfieldGeocoder processInput(WireInputData $input)
  * @method string ajaxurl()
+ * @method InputfieldWrapper getConfigInputfields()
  */
 
 class InputfieldGeocoder extends InputfieldWrapper {
 
-	public static function getModuleInfo() {
-		return array(
+	public static function getModuleInfo(): array {
+		return [
 			'title' => 'Geocoder',
-			'version' => 103,
+			'version' => 104,
 			'summary' => 'Inputfield for FieldtypeGeocoder.',
-			'href' => 'https://github.com/neuerituale/FieldtypeGeocoder',
 			'icon' => 'globe',
-			'requires' => 'FieldtypeGeocoder',
-		);
+			'requires' => 'FieldtypeGeocoder'
+		];
 	}
 
 	public function __construct() {
@@ -28,7 +37,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	 * @return string
 	 * @throws WireException
 	 */
-	public function ___render() {
+	public function ___render(): string {
 
 		if($this->page->template->name === 'admin') {
 			$this->prependMarkup = "<script>
@@ -132,9 +141,9 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	/**
 	 * Process input
 	 * @param WireInputData $input
-	 * @return InputfieldGeocoder|void
+	 * @return InputfieldGeocoder
 	 */
-	public function ___processInput(WireInputData $input) {
+	public function ___processInput(WireInputData $input): InputfieldGeocoder {
 
 		/** @var Geocoder $geocoder */
 		$geocoder = $this->attr('value');
@@ -158,7 +167,6 @@ class InputfieldGeocoder extends InputfieldWrapper {
 		if($geocoder->isChanged()) $this->trackChange('value');
 
 		return $this;
-
 	}
 
 	/**
@@ -175,7 +183,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	 * Get the ajax url (hookable)
 	 * @return string
 	 */
-	public function ___ajaxurl() {
+	public function ___ajaxurl(): string {
 		return $this->config->urls->admin . 'page/search/live/';
 	}
 
@@ -187,7 +195,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	 * @throws WireException
 	 * @throws WirePermissionException
 	 */
-	public function ___getConfigInputfields() {
+	public function ___getConfigInputfields(): InputfieldWrapper {
 
 		$value = new Geocoder();
 

@@ -1,6 +1,6 @@
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2021 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
@@ -124,7 +124,7 @@
 			}).addTo(t.map);
 
 			// customize icon
-			L.Icon.Default.prototype.options.imagePath = '/site/modules/FieldtypeGeocoder/assets/leaflet@1.7.1/images/'
+			L.Icon.Default.prototype.options.imagePath = '/site/modules/FieldtypeGeocoder/assets/leaflet@1.9.4/images/'
 
 			return this;
 		}
@@ -572,13 +572,13 @@ $(function() {
 	else {
 		const script = document.createElement("script");
 		script.type = "text/javascript";
-		script.src = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.7.1/leaflet.js";
+		script.src = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.9.4/leaflet.js";
 		$("head").append(script);
 
 		const link = document.createElement("link");
 		link.type = "text/css";
 		link.rel = "stylesheet";
-		link.href = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.7.1/leaflet.css";
+		link.href = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.9.4/leaflet.css";
 		$("head").append(link);
 	}
 

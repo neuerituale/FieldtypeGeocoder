@@ -24,6 +24,9 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
 2. Execute the following command in the /site/modules/FieldtypeGeocoder/ directory.
    ```bash
    composer install
+   
+   # if you get an php version error use
+   /usr/bin/php7.4 /usr/local/bin/composer update
    ```
 3. In processwire admin: Modules > Refresh and install Fieldtype > Geocoder.
 4. Insert the api-key for your geocoding provider. The default provider is [OpenCage](https://opencagedata.com/). OpenCage uses various other geocoding services. 
@@ -229,8 +232,6 @@ $wire->addHookAfter('FieldtypeGeocoder::filterQuery', function(HookEvent $event)
 - Update provider-string if you use the autocomplete function from the inputfield or move the marker.
 - Refactor the inputfield javascript for other maps or mapstyles
 - Add warnings if a vendor package is not found!
-- Add warning if api key is empty
 
 ## Feedback
-
-If you have any feedback, please reach out to us at [code@neuerituale.com](mailto:code@neuerituale.com)
+If you have any feedback, please reach out to us at [code@neuerituale.com](mailto:code@neuerituale.com) or create an issue in the github projekt.

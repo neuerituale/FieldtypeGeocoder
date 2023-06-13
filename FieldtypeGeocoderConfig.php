@@ -1,20 +1,18 @@
 <?php
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2021 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
 namespace ProcessWire;
 
-
 class FieldtypeGeocoderConfig extends ModuleConfig
 {
 	/**
 	 * @return array
-	 * @throws WireException
 	 */
-	public function getDefaults() {
+	public function getDefaults(): array {
 
 		return [
 			'apiKey' => '',
@@ -23,16 +21,15 @@ class FieldtypeGeocoderConfig extends ModuleConfig
 			'script' => '',
 			'loadLeafletCss' => true,
 			'loadLeafletScript' => true,
-
-			'libCss' => $this->config->urls->InputfieldGeocoder . 'assets/leaflet@1.7.1/leaflet.css',
-			'libScript' => $this->config->urls->InputfieldGeocoder . 'assets/leaflet@1.7.1/leaflet.js'
+			'libCss' => $this->config->urls->InputfieldGeocoder . 'assets/leaflet@1.9.4/leaflet.css',
+			'libScript' => $this->config->urls->InputfieldGeocoder . 'assets/leaflet@1.9.4/leaflet.js'
 		];
 	}
 
 	/**
 	 * @return InputfieldWrapper
 	 */
-	public function getInputfields() {
+	public function getInputfields(): InputfieldWrapper {
 
 		$inputfields = parent::getInputfields();
 

@@ -1,22 +1,30 @@
 {
 	"name": "nr/fieldtypegeocoder",
+	"type": "pw-module",
+	"description": "Collect and store Geocode information from several providers",
+	"keywords": [ "processwire", "module", "geocoder" ],
 	"minimum-stability": "beta",
 	"license": "MIT",
 	"authors": [
 		{
 			"name": "Neue Rituale",
-			"email": "code@neuerituale.com"
+			"email": "code@neuerituale.com",
+			"homepage": "https://neuerituale.com/",
+			"role": "Developer"
 		}
 	],
 	"require": {
-		"php": "^7.3 || ^8.0",
+		"hari/pw-module": "~1.0",
 		"php-http/curl-client": "^2.2",
-		"nyholm/psr7": "^1.4",
-		"geocoder-php/open-cage-provider": "^4.5",
+		"nyholm/psr7": "^1.8",
+		"geocoder-php/open-cage-provider": "^4.6",
 		"ext-json": "*",
 		"ext-curl": "*"
 	},
-	"suggest": {
-		"ext-simplexml": "If you want to use HostIpXml"
+	"config": {
+		"allow-plugins": {
+			"hari/pw-module": true,
+			"php-http/discovery": true
+		}
 	}
 }
