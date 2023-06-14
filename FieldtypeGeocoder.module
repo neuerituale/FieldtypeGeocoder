@@ -322,7 +322,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 					return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
 
 				/** @var Database $database */
-				$database = $this->wire()->database;
+				$database = wire()->database;
 				$table = $database->escapeTable($table);
 				$subfield = $database->escapeCol($subfield);
 				$query->where("{$table}.{$subfield}{$operator}?", (int) $value);

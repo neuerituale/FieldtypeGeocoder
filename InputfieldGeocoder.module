@@ -176,7 +176,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 	 */
 	public function sanitizePath($path) {
 		if(strpos($path, '//') === false) $path = $this->config->urls->root . ltrim($path, '/');
-		return $this->wire('sanitizer')->entities($path);
+		return wire()->sanitizer->entities($path);
 	}
 
 	/**
