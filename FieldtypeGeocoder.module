@@ -284,11 +284,11 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	 * @param string $subfield
 	 * @param string $operator
 	 * @param string $value
-	 * @return PageFinderDatabaseQuerySelect
+	 * @return DatabaseQuerySelect|PageFinderDatabaseQuerySelect
 	 *
 	 * @throws WireException
 	 */
-	public function getMatchQuery($query, $table, $subfield, $operator, $value): PageFinderDatabaseQuerySelect {
+	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
 
 		$table = $this->database->escapeTable($table);
 		if($subfield === 'query') $subfield = 'data';
