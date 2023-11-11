@@ -60,8 +60,8 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 		$schema['data'] = 'VARCHAR(255) NOT NULL DEFAULT ""';
 		$schema['formatted'] = 'TEXT NOT NULL';
 		$schema['geodata'] = 'JSON';
-		$schema['lat'] = "FLOAT(10,6) DEFAULT NULL"; // latitude
-		$schema['lng'] = "FLOAT(10,6) DEFAULT NULL"; // longitude
+		$schema['lat'] = "DECIMAL(10,6) DEFAULT NULL"; // latitude
+		$schema['lng'] = "DECIMAL(10,6) DEFAULT NULL"; // longitude
 		$schema['provider'] = "TINYTEXT"; // Provider (Google/Mapbox etc)
 		$schema['status'] = "INT(10) unsigned NOT NULL DEFAULT 1"; // geocode status
 
@@ -494,7 +494,10 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	public function ___loadGeocoderPhp() {
 		// check global geocoder class and include autoload
 		if(!class_exists("\Geocoder\StatefulGeocoder")) {
-			if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install geocoder-php in your the module directory.');
+			if(!file_exists(__DIR__ . '/vendor/autoload.php')) {
+				wire()->error('Please install geocoder-php in your the module directory.');
+				throw new \Exception('Please install geocoder-php in your the module directory.');
+			}
 			require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
 		}
 	}

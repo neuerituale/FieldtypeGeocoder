@@ -30,7 +30,6 @@ class Geocoder extends WireData implements \JsonSerializable {
 
 	/** @var int Skip geocoding on sleep. Status will remove on sleep */
 	const statusSkipGeocoding = 8;
-
 	const statusNotFound = 16;
 	const statusError = 128; /* max mysql field */
 
@@ -45,10 +44,11 @@ class Geocoder extends WireData implements \JsonSerializable {
 	 * Clear Wire Data
 	 * @return $this
 	 */
-	public function clear(): Geocoder {
+	public function clear($trackChanges = true): Geocoder {
+
+		if(!$trackChanges) { $this->setTrackChanges(false); }
 
 		$this->data = array();
-
 		$this->setArray([
 			'status' => self::statusOn,
 			'formatted' => '',
@@ -58,6 +58,8 @@ class Geocoder extends WireData implements \JsonSerializable {
 			'lng' => '',
 			'provider' => ''
 		]);
+
+		$this->setTrackChanges();
 
 		return $this;
 	}
