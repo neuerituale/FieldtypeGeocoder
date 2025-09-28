@@ -34,7 +34,7 @@ use Http\Client\Curl\Client;
 
 class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule {
 
-	public static function getModuleInfo() {
+    public static function getModuleInfo() {
 		return array(
 			'title' => 'Geocoder',
 			'version' => 105,
@@ -57,13 +57,18 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	public function getDatabaseSchema(Field $field): array {
 
 		$schema = parent::getDatabaseSchema($field);
-		$schema['data'] = 'VARCHAR(255) NOT NULL DEFAULT ""';
+		$schema['data'] = 'text NOT NULL';
 		$schema['formatted'] = 'TEXT NOT NULL';
 		$schema['geodata'] = 'JSON';
 		$schema['lat'] = "FLOAT(10,6) DEFAULT NULL"; // latitude
 		$schema['lng'] = "FLOAT(10,6) DEFAULT NULL"; // longitude
 		$schema['provider'] = "TINYTEXT"; // Provider (Google/Mapbox etc)
 		$schema['status'] = "INT(10) unsigned NOT NULL DEFAULT 1"; // geocode status
+		// Make sure keys array exists
+		if (!isset($schema['keys']) || !is_array($schema['keys'])) {
+			$schema['keys'] = [];
+		}
+		$schema['keys']['fulltext_data'] = 'FULLTEXT KEY fulltext_data (data)'; // add FULLTEXT index on the data column
 
 		return $schema;
 	}
@@ -276,124 +281,124 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 		return $result;
 	}
 
-	/**
-	 * Method called when the field is database-queried from a $pages->find() selector
-	 *
-	 * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect $query
-	 * @param string $table
-	 * @param string $subfield
-	 * @param string $operator
-	 * @param string $value
-	 * @return DatabaseQuerySelect|PageFinderDatabaseQuerySelect
-	 *
-	 * @throws WireException
-	 */
-	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+/**
+ * Method called when the field is database-queried from a $pages->find() selector
+ *
+ * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect $query
+ * @param string $table
+ * @param string $subfield
+ * @param string $operator
+ * @param string $value
+ * @return DatabaseQuerySelect|PageFinderDatabaseQuerySelect
+ *
+ * @throws WireException
+ */
+public function getMatchQuery($query, $table, $subfield, $operator, $value) {
 
-		$table = $this->database->escapeTable($table);
-		if($subfield === 'query') $subfield = 'data';
+	$table = $this->database->escapeTable($table);
+	if($subfield === 'query') $subfield = 'data';
 
-		switch($subfield) {
+	switch($subfield) {
 
-			// Fulltext fields
-			// e.g. $pages->find('geocoder*=Berl') same as $pages->find('geocoder.data*=Berl');
-			// e.g. $pages->find('geocoder.formatted*=Germany');
-			case 'data':
-			case 'formatted':
-			case 'provider':
+		// Fulltext fields
+		// e.g. $pages->find('geocoder*=Berl') same as $pages->find('geocoder.data*=Berl');
+		// e.g. $pages->find('geocoder.formatted*=Germany');
+		case 'data':
+		case 'formatted':
+		case 'provider':
 
-				$ft = new DatabaseQuerySelectFulltext($query);
-				$ft->match($table, $subfield, $operator, $value);
-				return $query;
+			$ft = new DatabaseQuerySelectFulltext($query);
+			$ft->match($table, $subfield, $operator, $value);
+			return $query;
 
-			// Default fields
-			// e.g $pages->find('geocoder.lat=10.394854839, geocoder.lng>45.345345')
-			case 'lat':
-			case 'lng':
+		// Default fields
+		// e.g $pages->find('geocoder.lat=10.394854839, geocoder.lng>45.345345')
+		case 'lat':
+		case 'lng':
+			return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+
+		// Status search (support bitwise)
+		// e.g $pages->find('geocoder.status=3')
+		// e.g $pages->find('geocoder.status&2|4')
+		case 'status':
+
+			// normal operator
+			if(!$this->database->isOperator($operator, WireDatabasePDO::operatorTypeBitwise))
 				return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
 
-			// Status search (support bitwise)
-			// e.g $pages->find('geocoder.status=3')
-			// e.g $pages->find('geocoder.status&2|4')
-			case 'status':
+			/** @var Database $database */
+			$database = wire()->database;
+			$table = $database->escapeTable($table);
+			$subfield = $database->escapeCol($subfield);
+			$query->where("{$table}.{$subfield}{$operator}?", (int) $value);
 
-				// normal operator
-				if(!$this->database->isOperator($operator, WireDatabasePDO::operatorTypeBitwise))
-					return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+			return $query;
 
-				/** @var Database $database */
-				$database = wire()->database;
-				$table = $database->escapeTable($table);
-				$subfield = $database->escapeCol($subfield);
-				$query->where("{$table}.{$subfield}{$operator}?", (int) $value);
+		// Proximity Search
+		// use lat and lng for calculation
+		// e.g. $pages->find('geocoder.proximity=34.3453453|3.34879345, limit=3')
+		// do not user sort=xyz!
+		case 'proximity':
 
-				return $query;
+			// Ignore second value
+			if($value === $query->selector->value[1]) return $query;
 
-			// Proximity Search
-			// use lat and lng for calculation
-			// e.g. $pages->find('geocoder.proximity=34.3453453|3.34879345, limit=3')
-			// do not user sort=xyz!
-			case 'proximity':
+			// Join
+			$query->join("field_geocoder AS $table ON $table.pages_id=pages.id");
 
-				// Ignore second value
-				if($value === $query->selector->value[1]) return $query;
+			// Ignore invalid selectors
+			if( !is_array($query->selector->value) || count($query->selector->value) !== 2 ) return $query;
 
-				// Join
-				$query->join("field_geocoder AS $table ON $table.pages_id=pages.id");
+			// Bind lat and lng
+			$query->bindValues([
+				'lat' => (float) $query->selector->value[0] / 180 * M_PI,
+				'lng' => (float) $query->selector->value[1] / 180 * M_PI,
+			]);
 
-				// Ignore invalid selectors
-				if( !is_array($query->selector->value) || count($query->selector->value) !== 2 ) return $query;
+			// Select
+			$query->select('( 6368 * SQRT(2*( 1-cos(RADIANS(' . $table . '.lat)) * cos(:lat) * (sin(RADIANS(' . $table . '.lng)) * sin(:lng) + cos(RADIANS(' . $table . '.lng)) * cos(:lng)) - sin(RADIANS(' . $table . '.lat)) * sin(:lat)))) AS ' . $table . '_distance');
 
-				// Bind lat and lng
-				$query->bindValues([
-					'lat' => (float) $query->selector->value[0] / 180 * M_PI,
-					'lng' => (float) $query->selector->value[1] / 180 * M_PI,
-				]);
+			// Order by distance
+			$query->orderby($table . '_distance');
 
-				// Select
-				$query->select('( 6368 * SQRT(2*( 1-cos(RADIANS(' . $table . '.lat)) * cos(:lat) * (sin(RADIANS(' . $table . '.lng)) * sin(:lng) + cos(RADIANS(' . $table . '.lng)) * cos(:lng)) - sin(RADIANS(' . $table . '.lat)) * sin(:lat)))) AS ' . $table . '_distance');
+			return $query;
 
-				// Order by distance
-				$query->orderby($table . '_distance');
+		// GEOJson Properties search
+		default :
 
-				return $query;
+			// cast to int or float
+			if(is_numeric($value)) $value = $value*1;
 
-			// GEOJson Properties search
-			default :
+			// get full fieldname with dot
+			$field = substr($query->selector->field, strpos($query->selector->field, '.') + 1);
 
-				// cast to int or float
-				if(is_numeric($value)) $value = $value*1;
+			// All default comparison operators are allowed
+			if($this->database->isOperator($operator, WireDatabasePDO::operatorTypeComparison)) {
 
-				// get full fieldname with dot
-				$field = substr($query->selector->field, strpos($query->selector->field, '.') + 1);
-
-				// All default comparison operators are allowed
-				if($this->database->isOperator($operator, WireDatabasePDO::operatorTypeComparison)) {
-
-					// is empty or null
-					// is not empty and not null
-					// mysql 5.7 or greater needed
-					if(!strlen($value)) {
-						if($operator === '=') {
-							$query->where("geodata->\"$.$field\" IS NULL OR geodata->\"$.$field\"='' OR geodata->\"$.$field\"=CAST('null' AS JSON)");
-						} else {
-							$query->where("geodata->\"$.$field\" IS NOT NULL AND geodata->\"$.$field\"!='' AND geodata->\"$.$field\"!=CAST('null' AS JSON)");
-						}
+				// is empty or null
+				// is not empty and not null
+				// mysql 5.7 or greater needed for JSON_EXTRACT
+				if(!strlen($value)) {
+					if($operator === '=') {
+						$query->where("JSON_EXTRACT(geodata, '$.$field') IS NULL OR JSON_EXTRACT(geodata, '$.$field')='' OR JSON_EXTRACT(geodata, '$.$field')=CAST('null' AS JSON)");
+					} else {
+						$query->where("JSON_EXTRACT(geodata, '$.$field') IS NOT NULL AND JSON_EXTRACT(geodata, '$.$field')!='' AND JSON_EXTRACT(geodata, '$.$field')!=CAST('null' AS JSON)");
 					}
-
-					// is value
-					// is greater/lower than...
-					else {
-						$query->where("geodata->\"$.$field\" {$operator} ?", "$value");
-					}
-				} else {
-					throw new \mysqli_sql_exception('Invalid operator for subfield: ' . $operator);
 				}
 
-				return $query;
-		}
+				// is value
+				// is greater/lower than...
+				else {
+					$query->where("JSON_EXTRACT(geodata, '$.$field') {$operator} ?", "$value");
+				}
+			} else {
+				throw new \mysqli_sql_exception('Invalid operator for subfield: ' . $operator);
+			}
 
+			return $query;
 	}
+
+}
 
 	/* Geocoder */
 
