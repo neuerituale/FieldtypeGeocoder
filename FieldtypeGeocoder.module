@@ -339,7 +339,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 				if($value === $query->selector->value[1]) return $query;
 
 				// Join
-				$query->join("field_geocoder AS $table ON $table.pages_id=pages.id");
+				$query->join($query->field->getTable() . " AS $table ON $table.pages_id=pages.id");
 
 				// Ignore invalid selectors
 				if( !is_array($query->selector->value) || count($query->selector->value) !== 2 ) return $query;
@@ -375,16 +375,24 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 					// mysql 5.7 or greater needed
 					if(!strlen($value)) {
 						if($operator === '=') {
-							$query->where("geodata->\"$.$field\" IS NULL OR geodata->\"$.$field\"='' OR geodata->\"$.$field\"=CAST('null' AS JSON)");
+							$query->where("
+							  JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) IS NULL
+							  OR JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) = ''
+							  OR JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) = 'null'
+							");
 						} else {
-							$query->where("geodata->\"$.$field\" IS NOT NULL AND geodata->\"$.$field\"!='' AND geodata->\"$.$field\"!=CAST('null' AS JSON)");
+							$query->where("
+							  JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) IS NOT NULL
+							  AND JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) != ''
+							  AND JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) != 'null'
+							");
 						}
 					}
 
 					// is value
 					// is greater/lower than...
 					else {
-						$query->where("geodata->\"$.$field\" {$operator} ?", "$value");
+						$query->where("JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) {$operator} ?", $value);
 					}
 				} else {
 					throw new \mysqli_sql_exception('Invalid operator for subfield: ' . $operator);
