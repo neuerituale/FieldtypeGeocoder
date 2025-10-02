@@ -1,6 +1,6 @@
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 

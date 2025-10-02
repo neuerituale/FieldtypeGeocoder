@@ -1,7 +1,7 @@
 <?php
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
@@ -57,7 +57,12 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 	public function getDatabaseSchema(Field $field): array {
 
 		$schema = parent::getDatabaseSchema($field);
-		$schema['data'] = 'VARCHAR(255) NOT NULL DEFAULT ""';
+
+		$len = $this->wire('database')->getMaxIndexLength();
+		$schema['data'] = 'text NOT NULL';
+		$schema['keys']['data_exact'] = "KEY `data_exact` (`data`($len))";
+		$schema['keys']['data'] = 'FULLTEXT KEY `data` (`data`)';
+
 		$schema['formatted'] = 'TEXT NOT NULL';
 		$schema['geodata'] = 'JSON';
 		$schema['lat'] = "DECIMAL(10,6) DEFAULT NULL"; // latitude
@@ -572,6 +577,34 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 			? (new StringFormatter())->format($location, $addressFormat)
 			: $location->getFormattedAddress()
 			;
+	}
+
+	public function ___upgrade($fromVersion, $toVersion): void {
+
+		$database = wire()->database;
+
+		if($fromVersion < 106) {
+
+			// Update database schema
+			// drop existing index and add two new indexes (BTREE and FULLTEXT)
+
+			/** @var FieldsArray $geocoderFields */
+			$geocoderFields = wire()->fields->find('type=FieldtypeGeocoder');
+			$len = $database->getMaxIndexLength();
+
+			/** @var Field $field */
+			foreach($geocoderFields as $field) {
+				$table = $field->getTable();
+				try {$database->exec("ALTER TABLE `$table` DROP INDEX `data`;"); } catch(\Exception $e) { /*ignore*/ }
+				$database->exec("
+					ALTER TABLE `$table` 
+					ADD KEY `data_exact` (`data`($len)), 
+					ADD FULLTEXT KEY `data` (`data`);
+				");
+			}
+
+		}
+
 	}
 
 }
