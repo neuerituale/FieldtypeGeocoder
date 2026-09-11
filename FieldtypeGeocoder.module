@@ -125,8 +125,13 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 
 		$geocoder = $this->getBlankValue($page, $field);
 
-		if("$value[lat]" === "0") $value['lat'] = '';
-		if("$value[lng]" === "0") $value['lng'] = '';
+		// treat only the "null island" pair (0,0 = uninitialized) as empty;
+		// a real location exactly on the equator or prime meridian must keep
+		// its other, non-zero coordinate intact
+		if("$value[lat]" === "0" && "$value[lng]" === "0") {
+			$value['lat'] = '';
+			$value['lng'] = '';
+		}
 
 		$geocoder->setArray([
 			'query' => $value['data'],
@@ -400,7 +405,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 						$query->where("JSON_UNQUOTE(JSON_EXTRACT(geodata, '$.$field')) {$operator} ?", $value);
 					}
 				} else {
-					throw new \mysqli_sql_exception('Invalid operator for subfield: ' . $operator);
+					throw new WireException('Invalid operator for subfield: ' . $operator);
 				}
 
 				return $query;
@@ -456,14 +461,28 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 		$p = $this->getProvider($a);
 		$g = $this->getGeocoder($p);
 
+		// keep original values so they can be restored on error/not-found
+		list($query, $lat, $lng) = [$geocoder->query, $geocoder->lat, $geocoder->lng];
+
 		// query
-		$collection = $forward
-			? $g->geocodeQuery( $this->filterQuery(GeocodeQuery::create($geocoder->query)) )
-			: $g->reverseQuery( $this->filterQuery(ReverseQuery::fromCoordinates($geocoder->lat, $geocoder->lng)) )
-		;
+		// catch provider/network failures (timeout, invalid api key, quota exceeded, ...)
+		// so a temporarily unreachable geocoding service can't break the page save
+		try {
+			$collection = $forward
+				? $g->geocodeQuery( $this->filterQuery(GeocodeQuery::create($geocoder->query)) )
+				: $g->reverseQuery( $this->filterQuery(ReverseQuery::fromCoordinates($geocoder->lat, $geocoder->lng)) )
+			;
+		} catch(\Throwable $e) {
+			wire()->log->save('errors', 'FieldtypeGeocoder: ' . $e->getMessage());
+			$this->warning('Geocoding request failed, please try again later.');
+
+			if($forward) $geocoder->clear()->set('query', $query);
+			else $geocoder->clear()->set('lat', $lat)->set('lng', $lng);
+
+			return $geocoder->addStatus(Geocoder::statusError);
+		}
 
 		// clear geocoder
-		list($query, $lat, $lng) = [$geocoder->query, $geocoder->lat, $geocoder->lng];
 		if($collection->isEmpty()) {
 			if($forward) $geocoder->clear()->set('query', $query);
 			else $geocoder->clear()->set('lat', $lat)->set('lng', $lng);
