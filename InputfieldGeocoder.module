@@ -137,6 +137,9 @@ class InputfieldGeocoder extends InputfieldWrapper {
 		// resolved dynamically (not hardcoded) so this keeps working regardless of the
 		// module's actual install directory name/casing (e.g. differs via Composer)
 		$this->wrapAttr('data-assetsurl', $this->config->urls->InputfieldGeocoder . 'assets/leaflet@1.9.4/');
+		// map tile endpoint, configurable so any Leaflet-compatible tile provider can be used
+		$this->wrapAttr('data-tileurl', $this->modules->getConfig('FieldtypeGeocoder', 'tileUrl'));
+		$this->wrapAttr('data-tileattribution', $this->modules->getConfig('FieldtypeGeocoder', 'tileAttribution'));
 
 		// Render
 		return parent::___render();

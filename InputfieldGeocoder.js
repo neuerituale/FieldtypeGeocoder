@@ -61,6 +61,8 @@
 
 			t.ajaxurl = t.$el.data('ajaxurl');
 			t.assetsurl = t.$el.data('assetsurl');
+			t.tileurl = t.$el.data('tileurl');
+			t.tileattribution = t.$el.data('tileattribution');
 			t.labels.notfound = t.$el.data('notfound');
 			t.labels.apply = t.$el.data('apply');
 
@@ -120,8 +122,8 @@
 
 			// init map
 			t.map = L.map( t.$preview[0], { scrollWheelZoom: false } ).setView(center, zoom);
-			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+			L.tileLayer(t.tileurl, {
+				attribution: t.tileattribution
 			}).addTo(t.map);
 
 			// customize icon (path resolved server-side, not hardcoded - see t.assetsurl)
