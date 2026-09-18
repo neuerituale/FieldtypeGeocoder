@@ -160,17 +160,11 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 		$geocoder = $value;
 		if(!$geocoder instanceof Geocoder) throw new WireException("Expecting an instance of Geocoder");
 
-		// TODO add stuff from inputProcess
-		// Skip geocoding:
-		//
-		// if status not New
-		// if geodate is not empty and
-		// formatted is not emty and
-		// lat is not empty and
-		// lng is not empty and
-		//      If geodata changes or
-		//      If the only change is the query fields
-		$changes = $geocoder->getChanges();
+		// Skip geocoding if the client already delivered a complete, verified
+		// result (e.g. picked an autocomplete suggestion or dragged the map
+		// marker) - detected by geodata having changed alongside the other
+		// fields. A query-only change must always re-geocode, since that's
+		// the normal "user typed a new address" case.
 		if(
 			$geocoder->status !== 1 &&
 			is_array($geocoder->geodata) &&
@@ -178,13 +172,7 @@ class FieldtypeGeocoder extends Fieldtype implements Module, ConfigurableModule 
 			!empty($geocoder->formatted) &&
 			!empty($geocoder->lat) &&
 			!empty($geocoder->lng) &&
-			(
-				$geocoder->isChanged('geodata') ||
-				(
-					count($changes) === 1 &&
-					$changes[0] === 'query'
-				)
-			)
+			$geocoder->isChanged('geodata')
 		) {
 			$geocoder->addStatus(Geocoder::statusSkipGeocoding);
 		}

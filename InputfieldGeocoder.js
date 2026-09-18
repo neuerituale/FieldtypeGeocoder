@@ -274,6 +274,10 @@
 					else t.helper.removeStatus(t.options.statusSingleResult | t.options.statusMultipleResults).addStatus(t.options.statusNotFound);
 				}
 
+				// keep the query field in sync with the confirmed location
+				// (autocomplete pick or "Apply" after dragging the marker)
+				t.$query.val(title);
+
 				// set formatted
 				t.setDescription(title);
 
