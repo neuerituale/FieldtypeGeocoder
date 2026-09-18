@@ -46,6 +46,12 @@ Thanks to Ryan (FieldtypeMapMarker) and mats (FieldtypeLeafletMapMarker), from w
 - PHP Extensions: json, curl, intl
 
 
+## Language pack
+
+A German translation is available in `languages/de.csv`. To install it, edit your language in
+`Setup` > `Languages` > `German` > `Files`, and import `languages/de.csv` via the CSV import.
+
+
 ## Module Configuration
 
 `Modules` > `Configure` > `FieldtypeGeocoder`

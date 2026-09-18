@@ -134,6 +134,9 @@ class InputfieldGeocoder extends InputfieldWrapper {
 		$this->wrapAttr('data-defaultcenter', json_encode($defaultCenter));
 		$this->wrapAttr('data-notfound', __('Geoinformation not found'));
 		$this->wrapAttr('data-apply', __('Apply'));
+		// resolved dynamically (not hardcoded) so this keeps working regardless of the
+		// module's actual install directory name/casing (e.g. differs via Composer)
+		$this->wrapAttr('data-assetsurl', $this->config->urls->InputfieldGeocoder . 'assets/leaflet@1.9.4/');
 
 		// Render
 		return parent::___render();

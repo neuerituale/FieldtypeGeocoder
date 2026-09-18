@@ -60,6 +60,7 @@
 			t.geojson = JSON.parse( t.$geojson.val() );
 
 			t.ajaxurl = t.$el.data('ajaxurl');
+			t.assetsurl = t.$el.data('assetsurl');
 			t.labels.notfound = t.$el.data('notfound');
 			t.labels.apply = t.$el.data('apply');
 
@@ -123,8 +124,8 @@
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			}).addTo(t.map);
 
-			// customize icon
-			L.Icon.Default.prototype.options.imagePath = '/site/modules/FieldtypeGeocoder/assets/leaflet@1.9.4/images/'
+			// customize icon (path resolved server-side, not hardcoded - see t.assetsurl)
+			L.Icon.Default.prototype.options.imagePath = t.assetsurl + 'images/'
 
 			return this;
 		}
@@ -570,19 +571,23 @@
 // RUN
 $(function() {
 
+	// assets path is rendered server-side (data-assetsurl) so this doesn't depend on
+	// the module's actual install directory name/casing (e.g. differs via Composer)
+	const assetsurl = $('.InputfieldGeocoder').first().data('assetsurl');
+
 	if(window.hasOwnProperty('L') && L.hasOwnProperty('map')) {
 		// map already loaded
 	}
-	else {
+	else if(assetsurl) {
 		const script = document.createElement("script");
 		script.type = "text/javascript";
-		script.src = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.9.4/leaflet.js";
+		script.src = assetsurl + "leaflet.js";
 		$("head").append(script);
 
 		const link = document.createElement("link");
 		link.type = "text/css";
 		link.rel = "stylesheet";
-		link.href = "/site/modules/FieldtypeGeocoder/assets/leaflet@1.9.4/leaflet.css";
+		link.href = assetsurl + "leaflet.css";
 		$("head").append(link);
 	}
 
