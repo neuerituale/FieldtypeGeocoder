@@ -63,6 +63,7 @@ class InputfieldGeocoder extends InputfieldWrapper {
 			'name' => $this->attr('name') . '_query',
 			'themeBorder' => 'none',
 			'class' => 'InputfieldGeocoderQuery InputfieldGeocoderAutocomplete',
+			'wrapClass' => 'InputfieldNoBorder',
 			'value' => $geocoder->query,
 			'useLanguages' => false,
 			'skipLabel' => Inputfield::skipLabelMarkup,
