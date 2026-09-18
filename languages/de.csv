@@ -1,0 +1,10 @@
+en,de,description,file,hash
+ApiKey,API-Schlüssel,,site/modules/FieldtypeGeocoder/FieldtypeGeocoderConfig.php,806737984ab19be2fd08ba36030549ac
+"ApiKey for your geocode provider. Default geocoder is [OpenCage](https://opencagedata.com/users/sign_up)","API-Schlüssel für Ihren Geokodierungsanbieter. Der Standard-Anbieter ist [OpenCage](https://opencagedata.com/users/sign_up)",,site/modules/FieldtypeGeocoder/FieldtypeGeocoderConfig.php,cbf0815188e9c2ff369ec677719a962f
+"e.g. %S %n %z %L","z.B. %S %n %z %L",,site/modules/FieldtypeGeocoder/FieldtypeGeocoderConfig.php,d23bf08f067feae459f778adbd6f3dab
+Format,Format,,site/modules/FieldtypeGeocoder/FieldtypeGeocoderConfig.php,520d0db389f362bf79ef56ca0af3dcab
+"Format the geocoded data. Leave empty or ""native"" for default formatting. Here is the mapping: [Geocoder-PHP Formatter](https://geocoder-php.org/docs/#formatters)","Format für den Geocoder. Leer lassen oder ""native"" für die standard Formatierung vom Provider. [Geocoder-PHP Formatter](https://geocoder-php.org/docs/#formatters)",,site/modules/FieldtypeGeocoder/FieldtypeGeocoderConfig.php,b61a59e037bba52e61becb09cafb719a
+"Geoinformation not found","Geoinformationen nicht gefunden",,site/modules/FieldtypeGeocoder/InputfieldGeocoder.module,687a203f41410bdb5a4c32b21af513be
+"Start typing address for searching ...","Adresse eingeben um suche zu starten...",,site/modules/FieldtypeGeocoder/InputfieldGeocoder.module,daf368d159e9f058dbc9941c7b30d315
+Apply,Bestätigen,,site/modules/FieldtypeGeocoder/InputfieldGeocoder.module,9639e32cab248434a17ab32237cb3b71
+"Default center",Standardzentrierung,,site/modules/FieldtypeGeocoder/InputfieldGeocoder.module,aa5dc32ac36c5bffc9e465819a5155cc
