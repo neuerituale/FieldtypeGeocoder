@@ -93,14 +93,20 @@
 				t.$clearButton.show();
 			}
 
+			// re-measure and fix the map size as soon as the field becomes visible (tabs, collapsed wrappers)
+			if(window.ResizeObserver) {
+				new ResizeObserver(function() {
+					t.helper.updateInputHeight();
+					if(t.map) t.map.invalidateSize();
+				}).observe(t.$query[0]);
+			}
+
 			// update mapsize
 			$(document).on('wiretabclick', function(e, $newTab, $oldTab) {
 				t.map.invalidateSize();
 				t.helper.updateInputHeight();
 				if(t.helper.validGeojson(t.geojson)) t.replaceGeojson(t.geojson);
 			});
-
-			window.mmm = this;
 
 			return this;
 		};
@@ -544,7 +550,10 @@
 		 * Optimize ui
 		 */
 		t.helper.updateInputHeight = function() {
-			t.$el[0].style.setProperty("--input-height", t.$query[0].offsetHeight + 'px');
+			// a hidden field (inactive tab, collapsed wrapper) measures 0 - keep the CSS default then
+			var height = t.$query[0].offsetHeight;
+			if(height > 0) t.$el[0].style.setProperty("--input-height", height + 'px');
+			else t.$el[0].style.removeProperty("--input-height");
 		}
 
 		// Run
